@@ -1,12 +1,16 @@
-import { Router } from "express";
-import GptService from "./gpt-service";
-import GptController from "./gpt-controller";
+import express from 'express';
+import GptController from './gpt-controller';
+import GptService from './gpt-service';
+import multer from 'multer';
 
-const gptRouter = Router();
+const router = express.Router();
 const gptService = new GptService();
 const gptController = new GptController(gptService);
 
-gptRouter.post("/ration", gptController.getRation);
-gptRouter.post("/saveWeekPlan", gptController.saveWeekPlan);
+const upload = multer({ dest: 'uploads/' });
 
-export default gptRouter;
+router.post('/get-ration', gptController.getRation);
+router.post('/save-week-plan', gptController.saveWeekPlan);
+router.post('/add-food', upload.single('photo'), (req, res) => gptController.addFood(req as any, res));
+
+export default router;
