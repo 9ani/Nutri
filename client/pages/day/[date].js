@@ -1,4 +1,3 @@
-// pages/day/[date].js
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import ProgressBar from 'react-bootstrap/ProgressBar';
@@ -12,22 +11,7 @@ const DayDetail = () => {
 
   useEffect(() => {
     if (date) {
-      // Hide fetch in comment and use manual data instead
-      /*
-      const fetchData = async () => {
-        try {
-          const response = await fetch(`http://localhost:5000/api/v1/nutritionData/${date}`);
-          const result = await response.json();
-          setDayPlan(result.dayPlan);
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        }
-      };
-
-      fetchData();
-      */
-
-      // Manual data
+      // Manual data for demonstration
       const manualData = {
         "date": "2024-07-01",
         "day": "Monday",
@@ -58,6 +42,12 @@ const DayDetail = () => {
             "iron": 5, // Start at 0
             "magnesium": 35, // Start at 0
             "potassium": 1000, // Start at 0
+            "calcium": 300, // Start at 0
+            "vitaminA": 500, // Start at 0
+            "vitaminC": 70, // Start at 0
+            "vitaminK": 120, // Start at 0
+            "vitaminB6": 2, // Start at 0
+            "folate": 400 // Start at 0
           },
           "calories": 500 // Start at 0
         }
@@ -75,13 +65,26 @@ const DayDetail = () => {
     return Math.round((current / max) * 100);
   };
 
-  const maxNutrients = {
-    fiber: 30, // grams
-    protein: 50, // grams
-    carbohydrates: 275, // grams
-    iron: 18, // mg
-    magnesium: 400, // mg
-    potassium: 4700 // mg
+  // Group nutrients for display
+  const nutrientGroups = {
+    "Vitamins": {
+      "vitaminA": 900, // mcg
+      "vitaminC": 90, // mg
+      "vitaminK": 120, // mcg
+      "vitaminB6": 1.3, // mg
+      "folate": 400 // mcg
+    },
+    "Macronutrients": {
+      "fiber": 30, // grams
+      "protein": 50, // grams
+      "carbohydrates": 275 // grams
+    },
+    "Minerals": {
+      "iron": 18, // mg
+      "magnesium": 400, // mg
+      "potassium": 4700, // mg
+      "calcium": 1000 // mg
+    }
   };
 
   return (
@@ -89,7 +92,7 @@ const DayDetail = () => {
       <Card>
         <Card.Body>
           <Card.Title>{dayPlan.date}</Card.Title>
-          <div className="mb-2">
+          <div className="mb-3">
             <strong>Calories</strong>
             <ProgressBar 
               now={calculatePercentage(dayPlan.nutritionSummary.calories, 2000)} 
@@ -97,54 +100,24 @@ const DayDetail = () => {
               variant="primary" 
             />
           </div>
-          <div className="mb-2">
-            <strong>Fiber</strong>
-            <ProgressBar 
-              variant="success" 
-              now={calculatePercentage(dayPlan.nutritionSummary.nutrients.fiber, maxNutrients.fiber)} 
-              label={`Fiber ${calculatePercentage(dayPlan.nutritionSummary.nutrients.fiber, maxNutrients.fiber)}%`} 
-            />
-          </div>
-          <div className="mb-2">
-            <strong>Protein</strong>
-            <ProgressBar 
-              variant="info" 
-              now={calculatePercentage(dayPlan.nutritionSummary.nutrients.protein, maxNutrients.protein)} 
-              label={`Protein ${calculatePercentage(dayPlan.nutritionSummary.nutrients.protein, maxNutrients.protein)}%`} 
-            />
-          </div>
-          <div className="mb-2">
-            <strong>Carbohydrates</strong>
-            <ProgressBar 
-              variant="warning" 
-              now={calculatePercentage(dayPlan.nutritionSummary.nutrients.carbohydrates, maxNutrients.carbohydrates)} 
-              label={`Carbohydrates ${calculatePercentage(dayPlan.nutritionSummary.nutrients.carbohydrates, maxNutrients.carbohydrates)}%`} 
-            />
-          </div>
-          <div className="mb-2">
-            <strong>Iron</strong>
-            <ProgressBar 
-              variant="danger" 
-              now={calculatePercentage(dayPlan.nutritionSummary.nutrients.iron, maxNutrients.iron)} 
-              label={`Iron ${calculatePercentage(dayPlan.nutritionSummary.nutrients.iron, maxNutrients.iron)}%`} 
-            />
-          </div>
-          <div className="mb-2">
-            <strong>Magnesium</strong>
-            <ProgressBar 
-              variant="info" 
-              now={calculatePercentage(dayPlan.nutritionSummary.nutrients.magnesium, maxNutrients.magnesium)} 
-              label={`Magnesium ${calculatePercentage(dayPlan.nutritionSummary.nutrients.magnesium, maxNutrients.magnesium)}%`} 
-            />
-          </div>
-          <div className="mb-2">
-            <strong>Potassium</strong>
-            <ProgressBar 
-              variant="warning" 
-              now={calculatePercentage(dayPlan.nutritionSummary.nutrients.potassium, maxNutrients.potassium)} 
-              label={`Potassium ${calculatePercentage(dayPlan.nutritionSummary.nutrients.potassium, maxNutrients.potassium)}%`} 
-            />
-          </div>
+
+          {/* Cards for nutrient groups */}
+          {Object.entries(nutrientGroups).map(([groupName, nutrients], index) => (
+            <Card key={index} className="mb-3">
+              <Card.Body>
+                <Card.Title>{groupName}</Card.Title>
+                {Object.entries(nutrients).map(([nutrient, max]) => (
+                  <div className="mb-3" key={nutrient}>
+                    <strong>{nutrient}</strong>
+                    <ProgressBar 
+                      now={calculatePercentage(dayPlan.nutritionSummary.nutrients[nutrient], max)} 
+                      label={`${nutrient} ${calculatePercentage(dayPlan.nutritionSummary.nutrients[nutrient], max)}%`} 
+                    />
+                  </div>
+                ))}
+              </Card.Body>
+            </Card>
+          ))}
         </Card.Body>
       </Card>
     </div>
