@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import GptService from './gpt-service';
+import  GptService  from './gpt-service';
 import { WeekPlanDocument } from './gpt-types';
 import multer from 'multer';
 

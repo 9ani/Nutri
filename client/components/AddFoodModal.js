@@ -32,7 +32,6 @@ const AddFoodModal = ({ show, handleClose }) => {
 
       if (response.ok) {
         console.log('Food added successfully!');
-        // Optionally, you can handle success actions like updating state or closing the modal
         handleClose();
       } else {
         console.error('Failed to add food.');

@@ -4,6 +4,7 @@ import AWS from "aws-sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { WeekPlanDocument, UserJson, WeekPlan } from "./gpt-types";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -28,11 +29,18 @@ AWS.config.update({
   region: process.env.AWS_REGION,
 });
 
+
+
 const s3 = new AWS.S3();
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// Define a custom type for multer file
+const weekPlanSchema = new mongoose.Schema({
+  weekPlan: Object,
+}, { timestamps: true });
+
+const WeekPlanModel = mongoose.model('WeekPlan', weekPlanSchema);
+
 interface MulterFile {
   fieldname: string;
   originalname: string;
@@ -46,20 +54,15 @@ interface MulterFile {
 }
 
 interface GptServiceInterface {
-  getRation(
-    userJson: UserJson,
-    userString: string
-  ): Promise<WeekPlanDocument | null>;
-  saveWeekPlan(weekPlan: WeekPlanDocument): Promise<string>;
+  getRation(userJson: UserJson, userString: string): Promise<WeekPlanDocument | null>;
+  saveWeekPlan(weekPlan: WeekPlanDocument): Promise<WeekPlanDocument | null>;
+  getWeekPlanById(id: string): Promise<WeekPlanDocument | null>;
   addFood(photo: MulterFile | undefined, description: string): Promise<any>;
   getNutrition(ingredient: string): Promise<any>;
 }
 
 class GptService implements GptServiceInterface {
-  async getRation(
-    userJson: UserJson,
-    userString: string
-  ): Promise<WeekPlanDocument | null> {
+  async getRation(userJson: UserJson, userString: string): Promise<WeekPlanDocument | null> {
     try {
       const userPromptString = JSON.stringify({ ...userJson, userString });
       const prompt = `${systemPrompt}\n${userPromptString}`;
@@ -79,9 +82,7 @@ class GptService implements GptServiceInterface {
           if (parsedRes && Array.isArray(parsedRes.weekPlan)) {
             return parsedRes.weekPlan as WeekPlanDocument;
           } else {
-            console.error(
-              "Invalid weekPlan structure: weekPlan is not an array."
-            );
+            console.error("Invalid weekPlan structure: weekPlan is not an array.");
             return null;
           }
         } catch (parseError) {
@@ -97,46 +98,49 @@ class GptService implements GptServiceInterface {
     }
   }
 
-  async saveWeekPlan(weekPlan: WeekPlanDocument): Promise<string> {
+  async saveWeekPlan(weekPlan: WeekPlanDocument): Promise<WeekPlanDocument | null> {
     try {
       if (!weekPlan || !Array.isArray(weekPlan)) {
-        throw new Error(
-          "Invalid weekPlan structure: weekPlan is not an array."
-        );
+        throw new Error("Invalid weekPlan structure: weekPlan is not an array.");
       }
-
       weekPlan.forEach((dayPlan: any) => {
         let calories: string | number = dayPlan.nutritionSummary.calories;
 
         if (typeof calories === "string" && calories.includes("-")) {
-          const [lowerCalories, upperCalories] = calories
-            .split("-")
-            .map(Number);
+          const [lowerCalories, upperCalories] = calories.split("-").map(Number);
           const averageCalories = (lowerCalories + upperCalories) / 2;
           dayPlan.nutritionSummary.calories = averageCalories;
         }
       });
-
-      const newWeekPlan = new WeekPlan({ weekPlan: weekPlan });
-      await newWeekPlan.save();
+      const newWeekPlan = new WeekPlanModel({ weekPlan: weekPlan });
+      const savedWeekPlan = await newWeekPlan.save();
       console.log("Week plan saved to MongoDB");
-      return "Week plan saved successfully";
+      return await this.getWeekPlanById(savedWeekPlan._id.toString());
     } catch (error) {
       console.error("Error saving week plan:", error);
       throw new Error("Error saving week plan");
     }
   }
 
-  async addFood(
-    photo: MulterFile | undefined,
-    description: string
-  ): Promise<any> {
+  async getWeekPlanById(id: string): Promise<WeekPlanDocument | null> {
+    try {
+      const weekPlan = await WeekPlanModel.findById(id);
+      if (!weekPlan) {
+        throw new Error("Week plan not found");
+      }
+      console.log(weekPlan.weekPlan);
+      return weekPlan.weekPlan as WeekPlanDocument;
+    } catch (error) {
+      console.error("Error fetching week plan:", error);
+      throw new Error("Error fetching week plan");
+    }
+  }
+
+  async addFood(photo: MulterFile | undefined, description: string): Promise<any> {
     try {
       if (!photo) {
         throw new Error("No photo provided");
       }
-
-      // Upload photo to AWS S3
       const photoData = fs.readFileSync(photo.path);
       if (!bucketName) {
         throw new Error("AWS_BUCKET_NAME is not set in environment variables.");
@@ -144,7 +148,7 @@ class GptService implements GptServiceInterface {
 
       const params = {
         Bucket: bucketName,
-        Key: `${Date.now()}_${photo.originalname}`, // Example key format, adjust as needed
+        Key: `${Date.now()}_${photo.originalname}`, 
         Body: photoData,
         ACL: "public-read",
         ContentType: photo.mimetype,
@@ -179,9 +183,7 @@ class GptService implements GptServiceInterface {
 
       const foodAnalysis = JSON.parse(text);
       if (!foodAnalysis || !foodAnalysis.dish) {
-        throw new Error(
-          "Unable to retrieve dish and ingredients from food analysis."
-        );
+        throw new Error("Unable to retrieve dish and ingredients from food analysis.");
       }
       if (foodAnalysis && foodAnalysis.dish && foodAnalysis.ingredients) {
         const dishName = foodAnalysis.dish;
@@ -195,9 +197,7 @@ class GptService implements GptServiceInterface {
           nutritionData,
         };
       } else {
-        console.error(
-          "Unable to retrieve dish and ingredients from food analysis."
-        );
+        console.error("Unable to retrieve dish and ingredients from food analysis.");
         throw new Error("Unable to retrieve dish and ingredients");
       }
     } catch (error) {
@@ -222,9 +222,8 @@ class GptService implements GptServiceInterface {
         "nutrition-type": "logging",
       };
 
-
       const response = await axios.get(url, { params });
-      console.log(params)
+      console.log(params);
       console.log(response.data);
       return response.data;
     } catch (error: any) {
@@ -237,12 +236,7 @@ class GptService implements GptServiceInterface {
 const systemPrompt = `You are a professional nutritionist providing personalized nutrition plans. Based on the user's data such as age, weight, allergies, and dietary preferences, you will generate a comprehensive daily meal plan for a week. 
 Provide meals that are popular in Central Asia, including countries like Russia and Kazakhstan. The plan should include all necessary vitamins and nutrients, ensuring a balanced diet.
 Even if the user has specific dietary restrictions, you should provide a suitable alternative. Even if the user asks for a ration for a day,
-provide a ration plan for a week starting from today's date ${new Date()
-  .toISOString()
-  .slice(
-    0,
-    10
-  )}. Please return the response in the following JSON format, without any additional symbols like brackets or quotes, only in JSON FORMAT:
+provide a ration plan for a week starting from today's date ${new Date().toISOString().slice(0, 10)}. Please return the response in the following JSON format, without any additional symbols like brackets or quotes, only in JSON FORMAT:
 {
     "weekPlan": [
         {
@@ -255,14 +249,23 @@ provide a ration plan for a week starting from today's date ${new Date()
                 }
             ],
             "nutritionSummary": {
-                "vitamins": "List of vitamins",
-                "nutrients": "List of key nutrients",
-                "calories": "Total calorie count"
+                "vitamins": {
+                    "vitaminA": "value and unit",
+                    "vitaminB": "value and unit",
+                    "vitaminC": "value and unit"
+                },
+                "minerals": {
+                    "calcium": "value and unit",
+                    "iron": "value and unit",
+                    "magnesium": "value and unit"
+                },
+                "calories": "value",
+                "protein": "value and unit",
+                "carbohydrates": "value and unit",
+                "fats": "value and unit"
             }
         }
     ]
-}
-Write calories only in number format, do not add any strings like "approximately".
-If the user prompt is irrelevant, return an empty weekPlan array.`;
+}`;
 
 export default GptService;

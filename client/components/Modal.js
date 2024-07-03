@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 
 const customStyles = {
@@ -14,16 +14,17 @@ const customStyles = {
 
 Modal.setAppElement('#__next');
 
-const ModalComponent = ({ isOpen, closeModal, onSubmit, userString }) => {
+const ModalComponent = ({ isOpen, closeModal, onSubmit, userString, setWeekPlan }) => {
   const [age, setAge] = useState('');
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
-  const [gender, setGender] = useState('male'); 
+  const [gender, setGender] = useState('male');
   const [allergies, setAllergies] = useState('');
   const [dietaryPreferences, setDietaryPreferences] = useState('');
   const [goals, setGoals] = useState('');
-  const [weekPlan, setWeekPlan] = useState(null);
   const [error, setError] = useState(null);
+
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,8 +34,8 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString }) => {
       weight: parseInt(weight),
       height: parseInt(height),
       gender,
-      allergies: allergies.split(',').map(item => item.trim()),
-      dietaryPreferences: dietaryPreferences.split(',').map(item => item.trim()),
+      allergies: allergies.split(',').map((item) => item.trim()),
+      dietaryPreferences: dietaryPreferences.split(',').map((item) => item.trim()),
       goals,
     };
 
@@ -56,8 +57,6 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString }) => {
       const responseData = await response.json();
       console.log('API Response:', responseData);
 
-      setWeekPlan(responseData);
-
       const saveResponse = await fetch('http://localhost:5000/api/v1/saveWeekPlan', {
         method: 'POST',
         headers: {
@@ -70,6 +69,13 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString }) => {
         throw new Error(`Failed to save week plan: ${saveResponse.statusText}`);
       }
 
+      const saveData = await saveResponse.json();
+      console.log(saveData);
+
+      // Save week plan data to localStorage
+      localStorage.setItem('weekPlan', JSON.stringify(saveData));
+
+      setWeekPlan(saveData);
       closeModal();
     } catch (error) {
       console.error('Error submitting data:', error);
@@ -78,12 +84,7 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString }) => {
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onRequestClose={closeModal}
-      style={customStyles}
-      contentLabel="Enter User Data"
-    >
+    <Modal isOpen={isOpen} onRequestClose={closeModal} style={customStyles} contentLabel="Enter User Data">
       <h2>Enter User Data</h2>
       <form onSubmit={handleSubmit}>
         <label>
@@ -104,7 +105,7 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString }) => {
         <label>
           Gender:
           <select value={gender} onChange={(e) => setGender(e.target.value)}>
-            <option value="male" selected>Male</option>
+            <option value="male">Male</option>
             <option value="female">Female</option>
           </select>
         </label>
@@ -116,11 +117,7 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString }) => {
         <br />
         <label>
           Dietary Preferences (comma-separated):
-          <input
-            type="text"
-            value={dietaryPreferences}
-            onChange={(e) => setDietaryPreferences(e.target.value)}
-          />
+          <input type="text" value={dietaryPreferences} onChange={(e) => setDietaryPreferences(e.target.value)} />
         </label>
         <br />
         <label>
@@ -132,13 +129,6 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString }) => {
       </form>
 
       {error && <div style={{ color: 'red', marginTop: '20px' }}>{error}</div>}
-
-      {weekPlan && (
-        <div style={{ marginTop: '20px' }}>
-          <h3>Week Plan</h3>
-          <pre>{JSON.stringify(weekPlan, null, 2)}</pre>
-        </div>
-      )}
     </Modal>
   );
 };

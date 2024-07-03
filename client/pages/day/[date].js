@@ -11,7 +11,6 @@ const DayDetail = () => {
 
   useEffect(() => {
     if (date) {
-      // Manual data for demonstration
       const manualData = {
         "date": "2024-07-01",
         "day": "Monday",
