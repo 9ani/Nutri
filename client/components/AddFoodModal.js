@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import Modal from 'react-bootstrap/Modal';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import Modal from "react-bootstrap/Modal";
+import Button from "react-bootstrap/Button";
+import Form from "react-bootstrap/Form";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
   const [photo, setPhoto] = useState(null);
@@ -18,32 +18,37 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     try {
       const formData = new FormData();
-      formData.append('photo', photo);
-      formData.append('description', description);
-
-      const response = await fetch('http://localhost:5000/api/v1/add-food', {
-        method: 'POST',
+      formData.append("photo", photo);
+      formData.append("description", description);
+  
+      const response = await fetch("http://localhost:5000/api/v1/add-food", {
+        method: "POST",
         body: formData,
       });
-
+  
       if (response.ok) {
-        console.log('Food added successfully!');
-        const data = await response.json(); // Assuming your backend returns nutrition data
-        console.log(data);
-        localStorage.setItem('weekPlan', JSON.stringify(data.updatedWeekPlan));
-
-        updateNutritionData(data); // Call the callback to update nutrition data in main page
+        console.log("Food added successfully!");
+        const data = await response.json();
+  
+        if (data && data.updatedWeekPlan && data.updatedWeekPlan) {
+          localStorage.setItem("weekPlan", JSON.stringify(data.updatedWeekPlan.weekPlan));
+          // updateNutritionData(data.fullUpdatedWeekPlan.weekPlan); // Call the callback to update nutrition data in main page
+        } else {
+          console.error("Missing week plan data in response:", data);
+        }
+  
         handleClose();
       } else {
-        console.error('Failed to add food.');
+        console.error("Failed to add food.");
       }
     } catch (error) {
-      console.error('Error adding food:', error);
+      console.error("Error adding food:", error);
     }
   };
+  
 
   return (
     <Modal show={show} onHide={handleClose}>
@@ -58,11 +63,11 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
           </Form.Group>
           <Form.Group controlId="formDescription" className="mb-3">
             <Form.Label>Or describe the food</Form.Label>
-            <Form.Control 
-              as="textarea" 
-              rows={3} 
-              value={description} 
-              onChange={handleDescriptionChange} 
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={description}
+              onChange={handleDescriptionChange}
             />
           </Form.Group>
           <Button variant="primary" type="submit">

@@ -5,7 +5,6 @@ import multer from 'multer';
 
 const upload = multer({ dest: 'uploads/' });
 
-// Extend the Request interface to include the `file` property
 interface MulterRequest extends Request {
   file: Express.Multer.File;
 }

@@ -233,93 +233,102 @@ class GptService implements GptServiceInterface {
   }
   private async updateNutritionToWeekPlan(nutritionData: any): Promise<any> {
     try {
-      // Fetch the most recent week plan from the database
       const recentWeekPlan = await WeekPlanModel.findOne().sort({ createdAt: -1 });
-  
+      console.log("Recent Week Plan:", recentWeekPlan);
       if (!recentWeekPlan) {
         throw new Error("No week plan found");
       }
   
-      // Get today's date in a comparable format
       const today = new Date().toISOString().split('T')[0];
-      console.log(today);
-  
-      // Find the day plan that matches today's date
+      console.log("Today's Date:", today);
       const dayPlan = recentWeekPlan.weekPlan.find((day: any) => {
         const planDate = new Date(day.date).toISOString().split('T')[0];
         return planDate === today;
       });
+      console.log("Day Plan:", dayPlan);
   
       if (!dayPlan) {
         throw new Error("No day plan found for today");
       }
   
-      // Prepare the update object
       const updateFields: any = {};
   
-      // Update calories
+      // Function to convert nutrient values to numbers
+      const convertToNumber = (value: string): number => {
+        const extractedNumber = parseFloat(value.replace(/[^\d.-]/g, ''));
+        return isNaN(extractedNumber) ? 0 : extractedNumber;
+      };
+  
+      // Update fields based on nutritionData
       if (nutritionData.calories) {
         console.log(`Adding calories: ${nutritionData.calories}`);
         updateFields['weekPlan.$.nutritionSummary.calories_filled'] = dayPlan.nutritionSummary.calories_filled + Number(nutritionData.calories);
       }
   
-      // Update vitamins
       if (nutritionData.totalNutrients.VITA_RAE && nutritionData.totalNutrients.VITA_RAE.quantity) {
         console.log(`Adding vitamin A: ${nutritionData.totalNutrients.VITA_RAE.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminA_filled'] = dayPlan.nutritionSummary.vitamins.vitaminA_filled + Number(nutritionData.totalNutrients.VITA_RAE.quantity);
+        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminA_filled'] = dayPlan.nutritionSummary.vitamins.vitaminA_filled + (nutritionData.totalNutrients.VITA_RAE.quantity);
       }
+  
       if (nutritionData.totalNutrients.VITC && nutritionData.totalNutrients.VITC.quantity) {
         console.log(`Adding vitamin C: ${nutritionData.totalNutrients.VITC.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminC_filled'] = dayPlan.nutritionSummary.vitamins.vitaminC_filled + Number(nutritionData.totalNutrients.VITC.quantity);
+        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminC_filled'] = dayPlan.nutritionSummary.vitamins.vitaminC_filled + (nutritionData.totalNutrients.VITC.quantity);
       }
+  
       if (nutritionData.totalNutrients.VITB6A && nutritionData.totalNutrients.VITB6A.quantity) {
         console.log(`Adding vitamin B: ${nutritionData.totalNutrients.VITB6A.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminB_filled'] = dayPlan.nutritionSummary.vitamins.vitaminB_filled + Number(nutritionData.totalNutrients.VITB6A.quantity);
+        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminB_filled'] = dayPlan.nutritionSummary.vitamins.vitaminB_filled + (nutritionData.totalNutrients.VITB6A.quantity);
       }
   
-      // Update minerals
       if (nutritionData.totalNutrients.CA && nutritionData.totalNutrients.CA.quantity) {
         console.log(`Adding calcium: ${nutritionData.totalNutrients.CA.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.minerals.calcium_filled'] = dayPlan.nutritionSummary.minerals.calcium_filled + Number(nutritionData.totalNutrients.CA.quantity);
+        updateFields['weekPlan.$.nutritionSummary.minerals.calcium_filled'] = dayPlan.nutritionSummary.minerals.calcium_filled + (nutritionData.totalNutrients.CA.quantity);
       }
+  
       if (nutritionData.totalNutrients.FE && nutritionData.totalNutrients.FE.quantity) {
         console.log(`Adding iron: ${nutritionData.totalNutrients.FE.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.minerals.iron_filled'] = dayPlan.nutritionSummary.minerals.iron_filled + Number(nutritionData.totalNutrients.FE.quantity);
+        updateFields['weekPlan.$.nutritionSummary.minerals.iron_filled'] = dayPlan.nutritionSummary.minerals.iron_filled + (nutritionData.totalNutrients.FE.quantity);
       }
+  
       if (nutritionData.totalNutrients.MG && nutritionData.totalNutrients.MG.quantity) {
         console.log(`Adding magnesium: ${nutritionData.totalNutrients.MG.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.minerals.magnesium_filled'] = dayPlan.nutritionSummary.minerals.magnesium_filled + Number(nutritionData.totalNutrients.MG.quantity);
+        updateFields['weekPlan.$.nutritionSummary.minerals.magnesium_filled'] = dayPlan.nutritionSummary.minerals.magnesium_filled + (nutritionData.totalNutrients.MG.quantity);
       }
   
-      // Update protein, carbohydrates, and fat
       if (nutritionData.totalNutrients.PROCNT && nutritionData.totalNutrients.PROCNT.quantity) {
         console.log(`Adding protein: ${nutritionData.totalNutrients.PROCNT.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.protein_filled'] = dayPlan.nutritionSummary.protein_filled + Number(nutritionData.totalNutrients.PROCNT.quantity);
+        updateFields['weekPlan.$.nutritionSummary.protein_filled'] = dayPlan.nutritionSummary.protein_filled + (nutritionData.totalNutrients.PROCNT.quantity);
       }
+  
       if (nutritionData.totalNutrients.CHOCDF && nutritionData.totalNutrients.CHOCDF.quantity) {
         console.log(`Adding carbohydrates: ${nutritionData.totalNutrients.CHOCDF.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.carbohydrates_filled'] = dayPlan.nutritionSummary.carbohydrates_filled + Number(nutritionData.totalNutrients.CHOCDF.quantity);
+        updateFields['weekPlan.$.nutritionSummary.carbohydrates_filled'] = dayPlan.nutritionSummary.carbohydrates_filled + (nutritionData.totalNutrients.CHOCDF.quantity);
       }
+  
       if (nutritionData.totalNutrients.FAT && nutritionData.totalNutrients.FAT.quantity) {
         console.log(`Adding fat: ${nutritionData.totalNutrients.FAT.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.fats_filled'] = dayPlan.nutritionSummary.fats_filled + Number(nutritionData.totalNutrients.FAT.quantity);
+        updateFields['weekPlan.$.nutritionSummary.fats_filled'] = dayPlan.nutritionSummary.fats_filled + (nutritionData.totalNutrients.FAT.quantity);
       }
   
-      // Update the specific day plan in the week plan
-      const updatedWeekPlan = await WeekPlanModel.updateOne(
+      const updateResult = await WeekPlanModel.findOneAndUpdate(
         { 'weekPlan._id': dayPlan._id },
-        { $set: updateFields }
+        { $set: updateFields },
+        { new: true }  // Return the updated document
       );
   
-      console.log("Week plan updated with nutrition data");
+      if (!updateResult) {
+        throw new Error("Failed to update week plan");
+      }
   
-      // Return the updated week plan
-      return updatedWeekPlan;
+      console.log("Week plan updated with nutrition data");
+      return updateResult;
     } catch (error) {
       console.error("Error saving nutrition to week plan:", error);
       throw new Error("Error saving nutrition to week plan");
     }
   }
+  
+  
   
   
   
@@ -360,7 +369,7 @@ provide a ration plan for a week starting from today's date ${new Date()
   .slice(
     0,
     10
-  )}. Please return the response in the following JSON format, without any additional symbols like brackets or quotes, only in this structured JSON FORMAT:
+  )}. Please return the response in the following JSON format, without any additional symbols like brackets or quotes, only in this structured JSON FORMAT without any additional strings:
 {
     "weekPlan": [
         {
@@ -377,7 +386,7 @@ provide a ration plan for a week starting from today's date ${new Date()
                     
                     "vitaminA": "value and unit",
                     "vitaminB": "value and unit",
-                    "vitaminC": "value and unit"
+                    "vitaminC": "value and unit",
                     "vitaminA_filled": 0,
                     "vitaminB_filled": 0,
                     "vitaminC_filled": 0,

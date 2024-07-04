@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Modal from 'react-modal';
 
 const customStyles = {
@@ -24,8 +24,6 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString, setWeekPlan 
   const [goals, setGoals] = useState('');
   const [error, setError] = useState(null);
 
-  
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -38,8 +36,6 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString, setWeekPlan 
       dietaryPreferences: dietaryPreferences.split(',').map((item) => item.trim()),
       goals,
     };
-
-    console.log('Request Data:', { userJson, userString });
 
     try {
       const response = await fetch('http://localhost:5000/api/v1/ration', {
@@ -55,7 +51,6 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString, setWeekPlan 
       }
 
       const responseData = await response.json();
-      console.log('API Response:', responseData);
 
       const saveResponse = await fetch('http://localhost:5000/api/v1/saveWeekPlan', {
         method: 'POST',
@@ -70,7 +65,6 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString, setWeekPlan 
       }
 
       const saveData = await saveResponse.json();
-      console.log(saveData);
 
       // Save week plan data to localStorage
       localStorage.setItem('weekPlan', JSON.stringify(saveData));
@@ -78,57 +72,113 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString, setWeekPlan 
       setWeekPlan(saveData);
       closeModal();
     } catch (error) {
-      console.error('Error submitting data:', error);
       setError(error.message);
     }
   };
 
   return (
     <Modal isOpen={isOpen} onRequestClose={closeModal} style={customStyles} contentLabel="Enter User Data">
-      <h2>Enter User Data</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Age:
-          <input type="number" value={age} onChange={(e) => setAge(e.target.value)} />
-        </label>
-        <br />
-        <label>
-          Weight (kg):
-          <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} />
-        </label>
-        <br />
-        <label>
-          Height (cm):
-          <input type="number" value={height} onChange={(e) => setHeight(e.target.value)} />
-        </label>
-        <br />
-        <label>
-          Gender:
-          <select value={gender} onChange={(e) => setGender(e.target.value)}>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-        </label>
-        <br />
-        <label>
-          Allergies (comma-separated):
-          <input type="text" value={allergies} onChange={(e) => setAllergies(e.target.value)} />
-        </label>
-        <br />
-        <label>
-          Dietary Preferences (comma-separated):
-          <input type="text" value={dietaryPreferences} onChange={(e) => setDietaryPreferences(e.target.value)} />
-        </label>
-        <br />
-        <label>
-          Goals:
-          <input type="text" value={goals} onChange={(e) => setGoals(e.target.value)} />
-        </label>
-        <br />
-        <button type="submit">Submit</button>
-      </form>
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm mx-auto">
+        <h2 className="text-2xl font-bold mb-4 text-center">Enter User Data</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-2" htmlFor="age">
+              Age
+            </label>
+            <input
+              className="form-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              type="number"
+              id="age"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-2" htmlFor="weight">
+              Weight (kg)
+            </label>
+            <input
+              className="form-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              type="number"
+              id="weight"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-2" htmlFor="height">
+              Height (cm)
+            </label>
+            <input
+              className="form-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              type="number"
+              id="height"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-2" htmlFor="gender">
+              Gender
+            </label>
+            <select
+              className="form-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              id="gender"
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+            >
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-2" htmlFor="allergies">
+              Allergies (comma-separated)
+            </label>
+            <input
+              className="form-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              type="text"
+              id="allergies"
+              value={allergies}
+              onChange={(e) => setAllergies(e.target.value)}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-2" htmlFor="dietaryPreferences">
+              Dietary Preferences (comma-separated)
+            </label>
+            <input
+              className="form-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              type="text"
+              id="dietaryPreferences"
+              value={dietaryPreferences}
+              onChange={(e) => setDietaryPreferences(e.target.value)}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-2" htmlFor="goals">
+              Goals
+            </label>
+            <input
+              className="form-input mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              type="text"
+              id="goals"
+              value={goals}
+              onChange={(e) => setGoals(e.target.value)}
+            />
+          </div>
+          <div className="text-center">
+            <button
+              type="submit"
+              className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              Submit
+            </button>
+          </div>
+        </form>
 
-      {error && <div style={{ color: 'red', marginTop: '20px' }}>{error}</div>}
+        {error && <div className="text-red-500 mt-4">{error}</div>}
+      </div>
     </Modal>
   );
 };

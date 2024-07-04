@@ -2,7 +2,6 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { Request } from 'express';
 import { Readable } from 'stream';
 
-// Define a custom type for the multer file
 interface MulterFile {
   fieldname: string;
   originalname: string;
@@ -13,7 +12,7 @@ interface MulterFile {
   filename: string;
   path: string;
   buffer: Buffer;
-  stream: Readable; // Add stream property
+  stream: Readable; 
 }
 
 interface Meal {
