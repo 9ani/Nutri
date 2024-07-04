@@ -1,11 +1,10 @@
-// components/AddFoodModal.js
 import React, { useState } from "react";
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const AddFoodModal = ({ show, handleClose }) => {
+const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
   const [photo, setPhoto] = useState(null);
   const [description, setDescription] = useState("");
 
@@ -32,6 +31,11 @@ const AddFoodModal = ({ show, handleClose }) => {
 
       if (response.ok) {
         console.log('Food added successfully!');
+        const data = await response.json(); // Assuming your backend returns nutrition data
+        console.log(data);
+        localStorage.setItem('weekPlan', JSON.stringify(data.updatedWeekPlan));
+
+        updateNutritionData(data); // Call the callback to update nutrition data in main page
         handleClose();
       } else {
         console.error('Failed to add food.');

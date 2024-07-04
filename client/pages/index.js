@@ -6,12 +6,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Button from 'react-bootstrap/Button';
 
 import ModalComponent from "../components/Modal";
-import NutritionChart from "../components/NutritionChart";
 import AddFoodModal from "../components/AddFoodModal";
 
 const IndexPage = () => {
-  const [weekPlan, setWeekPlan] = useState([
-  ]);
+  const [weekPlan, setWeekPlan] = useState([]);
   useEffect(() => {
     const savedWeekPlan = localStorage.getItem('weekPlan');
     if (savedWeekPlan) {
@@ -36,8 +34,32 @@ const IndexPage = () => {
     router.push(`/day/${dayPlan.date}`);
   };
 
-  const calculatePercentage = (current, max) => {
-    return (current / max) * 100;
+  const calculatePercentage = (filled, max) => {
+    return (filled / max) * 100;
+  };
+
+  const updateNutritionData = (nutritionData) => {
+    const updatedWeekPlan = weekPlan.map(dayPlan => {
+      if (dayPlan.date === today) { // Update the current day's plan
+        const receivedCalories = nutritionData.nutritionData.calories; // Extract calories from the updated nutritionData structure
+        const maxCalories = dayPlan.nutritionSummary?.calories; // Get max calories from nutritionSummary
+        const caloriesFilled = dayPlan.nutritionSummary?.calories_filled || 0; // Get filled calories from nutritionSummary
+        
+        // Update the specific day's plan with the new calorie information
+        return {
+          ...dayPlan,
+          nutritionSummary: {
+            ...dayPlan.nutritionSummary,
+            calories: maxCalories, // Update max calories
+            calories_filled: caloriesFilled + receivedCalories // Update filled calories
+          }
+        };
+      }
+      return dayPlan;
+    });
+
+    setWeekPlan(updatedWeekPlan); // Update the weekPlan state with the updated day's plan
+    localStorage.setItem('weekPlan', JSON.stringify(updatedWeekPlan)); // Save the updated weekPlan to localStorage
   };
 
   return (
@@ -62,7 +84,7 @@ const IndexPage = () => {
           <Button variant="primary" onClick={handleShow}>
             Add Food
           </Button>
-          <AddFoodModal show={showModal} handleClose={handleClose} />
+          <AddFoodModal show={showModal} handleClose={handleClose} updateNutritionData={updateNutritionData} />
         </div>
         <h1>Nutrition Data</h1>
         {userData && (
@@ -86,8 +108,8 @@ const IndexPage = () => {
                 <Card.Title>{dayPlan.date} - {dayPlan.day}</Card.Title>
                 Progress
                 <ProgressBar 
-                  now={calculatePercentage(0, dayPlan.nutritionSummary?.calories || 100)}
-                  label={`Calories`} 
+                  now={calculatePercentage(dayPlan.nutritionSummary?.calories_filled || 0, dayPlan.nutritionSummary?.calories || 100)}
+                  label={`Calories ${dayPlan.nutritionSummary?.calories_filled || 0}/${dayPlan.nutritionSummary?.calories || 100}`} 
                   max={100}
                 />
                 {/* Add other nutrient progress bars similarly if needed */}

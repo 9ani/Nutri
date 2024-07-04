@@ -29,17 +29,18 @@ AWS.config.update({
   region: process.env.AWS_REGION,
 });
 
-
-
 const s3 = new AWS.S3();
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-const weekPlanSchema = new mongoose.Schema({
-  weekPlan: Object,
-}, { timestamps: true });
+const weekPlanSchema = new mongoose.Schema(
+  {
+    weekPlan: Object,
+  },
+  { timestamps: true }
+);
 
-const WeekPlanModel = mongoose.model('WeekPlan', weekPlanSchema);
+const WeekPlanModel = mongoose.model("WeekPlan", weekPlanSchema);
 
 interface MulterFile {
   fieldname: string;
@@ -54,7 +55,10 @@ interface MulterFile {
 }
 
 interface GptServiceInterface {
-  getRation(userJson: UserJson, userString: string): Promise<WeekPlanDocument | null>;
+  getRation(
+    userJson: UserJson,
+    userString: string
+  ): Promise<WeekPlanDocument | null>;
   saveWeekPlan(weekPlan: WeekPlanDocument): Promise<WeekPlanDocument | null>;
   getWeekPlanById(id: string): Promise<WeekPlanDocument | null>;
   addFood(photo: MulterFile | undefined, description: string): Promise<any>;
@@ -62,7 +66,10 @@ interface GptServiceInterface {
 }
 
 class GptService implements GptServiceInterface {
-  async getRation(userJson: UserJson, userString: string): Promise<WeekPlanDocument | null> {
+  async getRation(
+    userJson: UserJson,
+    userString: string
+  ): Promise<WeekPlanDocument | null> {
     try {
       const userPromptString = JSON.stringify({ ...userJson, userString });
       const prompt = `${systemPrompt}\n${userPromptString}`;
@@ -82,7 +89,9 @@ class GptService implements GptServiceInterface {
           if (parsedRes && Array.isArray(parsedRes.weekPlan)) {
             return parsedRes.weekPlan as WeekPlanDocument;
           } else {
-            console.error("Invalid weekPlan structure: weekPlan is not an array.");
+            console.error(
+              "Invalid weekPlan structure: weekPlan is not an array."
+            );
             return null;
           }
         } catch (parseError) {
@@ -98,16 +107,22 @@ class GptService implements GptServiceInterface {
     }
   }
 
-  async saveWeekPlan(weekPlan: WeekPlanDocument): Promise<WeekPlanDocument | null> {
+  async saveWeekPlan(
+    weekPlan: WeekPlanDocument
+  ): Promise<WeekPlanDocument | null> {
     try {
       if (!weekPlan || !Array.isArray(weekPlan)) {
-        throw new Error("Invalid weekPlan structure: weekPlan is not an array.");
+        throw new Error(
+          "Invalid weekPlan structure: weekPlan is not an array."
+        );
       }
       weekPlan.forEach((dayPlan: any) => {
         let calories: string | number = dayPlan.nutritionSummary.calories;
 
         if (typeof calories === "string" && calories.includes("-")) {
-          const [lowerCalories, upperCalories] = calories.split("-").map(Number);
+          const [lowerCalories, upperCalories] = calories
+            .split("-")
+            .map(Number);
           const averageCalories = (lowerCalories + upperCalories) / 2;
           dayPlan.nutritionSummary.calories = averageCalories;
         }
@@ -121,13 +136,13 @@ class GptService implements GptServiceInterface {
       throw new Error("Error saving week plan");
     }
   }
-
   async getWeekPlanById(id: string): Promise<WeekPlanDocument | null> {
     try {
       const weekPlan = await WeekPlanModel.findById(id);
       if (!weekPlan) {
         throw new Error("Week plan not found");
       }
+
       console.log(weekPlan.weekPlan);
       return weekPlan.weekPlan as WeekPlanDocument;
     } catch (error) {
@@ -136,7 +151,10 @@ class GptService implements GptServiceInterface {
     }
   }
 
-  async addFood(photo: MulterFile | undefined, description: string): Promise<any> {
+  async addFood(
+    photo: MulterFile | undefined,
+    description: string
+  ): Promise<any> {
     try {
       if (!photo) {
         throw new Error("No photo provided");
@@ -148,7 +166,7 @@ class GptService implements GptServiceInterface {
 
       const params = {
         Bucket: bucketName,
-        Key: `${Date.now()}_${photo.originalname}`, 
+        Key: `${Date.now()}_${photo.originalname}`,
         Body: photoData,
         ACL: "public-read",
         ContentType: photo.mimetype,
@@ -183,21 +201,29 @@ class GptService implements GptServiceInterface {
 
       const foodAnalysis = JSON.parse(text);
       if (!foodAnalysis || !foodAnalysis.dish) {
-        throw new Error("Unable to retrieve dish and ingredients from food analysis.");
+        throw new Error(
+          "Unable to retrieve dish and ingredients from food analysis."
+        );
       }
       if (foodAnalysis && foodAnalysis.dish && foodAnalysis.ingredients) {
         const dishName = foodAnalysis.dish;
 
         const nutritionData = await this.getNutrition(dishName);
 
-        fs.unlinkSync(photo.path); 
+        fs.unlinkSync(photo.path);
+        const updatedWeekPlan = await this.updateNutritionToWeekPlan(nutritionData);
+    console.log("Updated Week Plan:", updatedWeekPlan);
 
         return {
           foodAnalysis,
           nutritionData,
+          updatedWeekPlan,
+
         };
       } else {
-        console.error("Unable to retrieve dish and ingredients from food analysis.");
+        console.error(
+          "Unable to retrieve dish and ingredients from food analysis."
+        );
         throw new Error("Unable to retrieve dish and ingredients");
       }
     } catch (error) {
@@ -205,7 +231,100 @@ class GptService implements GptServiceInterface {
       throw new Error("Error analyzing food");
     }
   }
-
+  private async updateNutritionToWeekPlan(nutritionData: any): Promise<any> {
+    try {
+      // Fetch the most recent week plan from the database
+      const recentWeekPlan = await WeekPlanModel.findOne().sort({ createdAt: -1 });
+  
+      if (!recentWeekPlan) {
+        throw new Error("No week plan found");
+      }
+  
+      // Get today's date in a comparable format
+      const today = new Date().toISOString().split('T')[0];
+      console.log(today);
+  
+      // Find the day plan that matches today's date
+      const dayPlan = recentWeekPlan.weekPlan.find((day: any) => {
+        const planDate = new Date(day.date).toISOString().split('T')[0];
+        return planDate === today;
+      });
+  
+      if (!dayPlan) {
+        throw new Error("No day plan found for today");
+      }
+  
+      // Prepare the update object
+      const updateFields: any = {};
+  
+      // Update calories
+      if (nutritionData.calories) {
+        console.log(`Adding calories: ${nutritionData.calories}`);
+        updateFields['weekPlan.$.nutritionSummary.calories_filled'] = dayPlan.nutritionSummary.calories_filled + Number(nutritionData.calories);
+      }
+  
+      // Update vitamins
+      if (nutritionData.totalNutrients.VITA_RAE && nutritionData.totalNutrients.VITA_RAE.quantity) {
+        console.log(`Adding vitamin A: ${nutritionData.totalNutrients.VITA_RAE.quantity}`);
+        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminA_filled'] = dayPlan.nutritionSummary.vitamins.vitaminA_filled + Number(nutritionData.totalNutrients.VITA_RAE.quantity);
+      }
+      if (nutritionData.totalNutrients.VITC && nutritionData.totalNutrients.VITC.quantity) {
+        console.log(`Adding vitamin C: ${nutritionData.totalNutrients.VITC.quantity}`);
+        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminC_filled'] = dayPlan.nutritionSummary.vitamins.vitaminC_filled + Number(nutritionData.totalNutrients.VITC.quantity);
+      }
+      if (nutritionData.totalNutrients.VITB6A && nutritionData.totalNutrients.VITB6A.quantity) {
+        console.log(`Adding vitamin B: ${nutritionData.totalNutrients.VITB6A.quantity}`);
+        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminB_filled'] = dayPlan.nutritionSummary.vitamins.vitaminB_filled + Number(nutritionData.totalNutrients.VITB6A.quantity);
+      }
+  
+      // Update minerals
+      if (nutritionData.totalNutrients.CA && nutritionData.totalNutrients.CA.quantity) {
+        console.log(`Adding calcium: ${nutritionData.totalNutrients.CA.quantity}`);
+        updateFields['weekPlan.$.nutritionSummary.minerals.calcium_filled'] = dayPlan.nutritionSummary.minerals.calcium_filled + Number(nutritionData.totalNutrients.CA.quantity);
+      }
+      if (nutritionData.totalNutrients.FE && nutritionData.totalNutrients.FE.quantity) {
+        console.log(`Adding iron: ${nutritionData.totalNutrients.FE.quantity}`);
+        updateFields['weekPlan.$.nutritionSummary.minerals.iron_filled'] = dayPlan.nutritionSummary.minerals.iron_filled + Number(nutritionData.totalNutrients.FE.quantity);
+      }
+      if (nutritionData.totalNutrients.MG && nutritionData.totalNutrients.MG.quantity) {
+        console.log(`Adding magnesium: ${nutritionData.totalNutrients.MG.quantity}`);
+        updateFields['weekPlan.$.nutritionSummary.minerals.magnesium_filled'] = dayPlan.nutritionSummary.minerals.magnesium_filled + Number(nutritionData.totalNutrients.MG.quantity);
+      }
+  
+      // Update protein, carbohydrates, and fat
+      if (nutritionData.totalNutrients.PROCNT && nutritionData.totalNutrients.PROCNT.quantity) {
+        console.log(`Adding protein: ${nutritionData.totalNutrients.PROCNT.quantity}`);
+        updateFields['weekPlan.$.nutritionSummary.protein_filled'] = dayPlan.nutritionSummary.protein_filled + Number(nutritionData.totalNutrients.PROCNT.quantity);
+      }
+      if (nutritionData.totalNutrients.CHOCDF && nutritionData.totalNutrients.CHOCDF.quantity) {
+        console.log(`Adding carbohydrates: ${nutritionData.totalNutrients.CHOCDF.quantity}`);
+        updateFields['weekPlan.$.nutritionSummary.carbohydrates_filled'] = dayPlan.nutritionSummary.carbohydrates_filled + Number(nutritionData.totalNutrients.CHOCDF.quantity);
+      }
+      if (nutritionData.totalNutrients.FAT && nutritionData.totalNutrients.FAT.quantity) {
+        console.log(`Adding fat: ${nutritionData.totalNutrients.FAT.quantity}`);
+        updateFields['weekPlan.$.nutritionSummary.fats_filled'] = dayPlan.nutritionSummary.fats_filled + Number(nutritionData.totalNutrients.FAT.quantity);
+      }
+  
+      // Update the specific day plan in the week plan
+      const updatedWeekPlan = await WeekPlanModel.updateOne(
+        { 'weekPlan._id': dayPlan._id },
+        { $set: updateFields }
+      );
+  
+      console.log("Week plan updated with nutrition data");
+  
+      // Return the updated week plan
+      return updatedWeekPlan;
+    } catch (error) {
+      console.error("Error saving nutrition to week plan:", error);
+      throw new Error("Error saving nutrition to week plan");
+    }
+  }
+  
+  
+  
+  
+  
   async getNutrition(ingredient: string): Promise<any> {
     try {
       if (!EDAMAM_API_ID || !EDAMAM_API_KEY) {
@@ -236,7 +355,12 @@ class GptService implements GptServiceInterface {
 const systemPrompt = `You are a professional nutritionist providing personalized nutrition plans. Based on the user's data such as age, weight, allergies, and dietary preferences, you will generate a comprehensive daily meal plan for a week. 
 Provide meals that are popular in Central Asia, including countries like Russia and Kazakhstan. The plan should include all necessary vitamins and nutrients, ensuring a balanced diet.
 Even if the user has specific dietary restrictions, you should provide a suitable alternative. Even if the user asks for a ration for a day,
-provide a ration plan for a week starting from today's date ${new Date().toISOString().slice(0, 10)}. Please return the response in the following JSON format, without any additional symbols like brackets or quotes, only in JSON FORMAT:
+provide a ration plan for a week starting from today's date ${new Date()
+  .toISOString()
+  .slice(
+    0,
+    10
+  )}. Please return the response in the following JSON format, without any additional symbols like brackets or quotes, only in this structured JSON FORMAT:
 {
     "weekPlan": [
         {
@@ -250,19 +374,32 @@ provide a ration plan for a week starting from today's date ${new Date().toISOSt
             ],
             "nutritionSummary": {
                 "vitamins": {
+                    
                     "vitaminA": "value and unit",
                     "vitaminB": "value and unit",
                     "vitaminC": "value and unit"
+                    "vitaminA_filled": 0,
+                    "vitaminB_filled": 0,
+                    "vitaminC_filled": 0,
+
                 },
                 "minerals": {
                     "calcium": "value and unit",
                     "iron": "value and unit",
                     "magnesium": "value and unit"
+                    "calcium_filled": 0,
+                    "iron_filled": 0,
+                    "magnesium_filled": 0,
+
                 },
                 "calories": "value",
                 "protein": "value and unit",
                 "carbohydrates": "value and unit",
                 "fats": "value and unit"
+                "calories_filled": 0,
+                "protein_filled": 0,
+                "carbohydrates_filled": 0,
+                "fats_filled": 0,
             }
         }
     ]
