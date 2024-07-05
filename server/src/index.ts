@@ -15,7 +15,6 @@ app.use(logger);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// MongoDB connection
 mongoose.connect(process.env.MONGO_URI as string, {
 });
 
@@ -25,7 +24,6 @@ db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
-// Global routes
 app.use('/api/v1/', globalRouter);
 
 app.listen(PORT, () => {

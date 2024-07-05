@@ -37,7 +37,7 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString, setWeekPlan 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setLoading(true); // Set loading state to true
+    setLoading(true);
 
     const userJson = {
       age: parseInt(age),
@@ -50,7 +50,6 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString, setWeekPlan 
     };
 
     try {
-      // Show loading message for API request
       onSubmit === 'saveWeekPlan' ? alert('We are saving the data') : console.log("We're building your ration");
 
       const response = await fetch('http://localhost:5000/api/v1/ration', {
@@ -81,14 +80,13 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString, setWeekPlan 
 
       const saveData = await saveResponse.json();
 
-      // Save week plan data to localStorage
       localStorage.setItem('weekPlan', JSON.stringify(saveData));
 
       setWeekPlan(saveData);
-      setLoading(false); // Reset loading state
+      setLoading(false); 
       closeModal();
     } catch (error) {
-      setLoading(false); // Reset loading state
+      setLoading(false); 
       setError(error.message);
     }
   };
@@ -97,7 +95,7 @@ const ModalComponent = ({ isOpen, closeModal, onSubmit, userString, setWeekPlan 
     <Modal isOpen={isOpen} onRequestClose={closeModal} style={customStyles} contentLabel="Enter User Data">
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm mx-auto">
         <h2 className="text-2xl font-bold mb-4 text-center">Enter User Data</h2>
-        {loading ? ( // Show loading spinner while waiting for API response
+        {loading ? ( 
           <div className="text-center">
             <p className="text-gray-500">Loading...</p>
           </div>

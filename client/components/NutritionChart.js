@@ -5,7 +5,6 @@ const NutritionChart = ({ userData = [] }) => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    // Manually add the provided data
     const providedData = [
       {"date":"2024-07-01","calories":2000,"protein":200,"carbohydrates":300.33,"fiber":250.33,"calcium":190.33,"iron":400.33,"potassium":450.33},
       {"date":"2024-07-02","calories":1800,"protein":278,"carbohydrates":250,"fiber":300,"calcium":350,"iron":195,"potassium":285},

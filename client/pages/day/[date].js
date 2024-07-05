@@ -11,7 +11,6 @@ const DayDetail = () => {
   const [dayPlan, setDayPlan] = useState(null);
 
   useEffect(() => {
-    // Retrieve dayPlan from localStorage
     const storedWeekPlan = localStorage.getItem("weekPlan");
 
     if (storedWeekPlan) {

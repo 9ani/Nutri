@@ -1,5 +1,4 @@
-// pages/_app.js
-import Modal from "../components/Modal"; // Adjust the path according to your actual structure
+import Modal from "../components/Modal"; 
 import "../styles/globals.css";
 
 function MyApp({ Component, pageProps }) {

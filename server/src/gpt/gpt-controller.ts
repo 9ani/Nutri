@@ -55,7 +55,7 @@ class GptController {
 
   async addFood(req: Request, res: Response): Promise<void> {
     try {
-      const multerReq = req as MulterRequest; // Type assertion
+      const multerReq = req as MulterRequest;
       const photo = multerReq.file;
       const description = multerReq.body.description;
 

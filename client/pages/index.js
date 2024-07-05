@@ -5,10 +5,9 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import ModalComponent from "../components/Modal";
 import AddFoodModal from "../components/AddFoodModal";
-import Header from "../components/Header"; // Assuming you have a Header component
+import Header from "../components/Header"; 
 import "bootstrap/dist/css/bootstrap.min.css";
 import Image from "next/image";
-/* You can add this in your Tailwind CSS configuration file or a global stylesheet */
 <style jsx>{`
   .card-container {
     display: flex;
@@ -50,14 +49,11 @@ const IndexPage = () => {
 
   return (
     <div className="">
-      {/* Header */}
       <Header />
       
-      {/* Landing Page Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {weekPlan.length === 0 && (
           <>
-            {/* Left Side: Input Section */}
             <div className="col-span-1 lg:col-span-1 flex-column justify-center mt-[300px] ml-[200px]">
               <h2 className="text-4xl font-bold mb-4">Nutrition Ration Planner</h2>
               <div className="text-center flex  p-1 gap-[20px] h-[60px]">
@@ -88,7 +84,6 @@ const IndexPage = () => {
               />
             </div>
 
-            {/* Right Side: Image */}
             <div className=" lg:block lg:col-span-1 relative h-[500px] mt-[100px] mr-[100px] b">
               <Image
                 src="/bg.avif"
@@ -100,7 +95,6 @@ const IndexPage = () => {
             </div>
           </>
         )}
-        {/* Render Week Plan Cards if Available */}
         {weekPlan.length > 0 &&
   weekPlan.map((dayPlan) => (
     <div
@@ -126,7 +120,6 @@ const IndexPage = () => {
           variant={dayPlan.date === today ? "success" : "info"}
           className="mb-3"
         />
-        {/* Add other nutrient progress bars similarly if needed */}
       </div>
     </div>
   ))}
@@ -136,7 +129,6 @@ const IndexPage = () => {
 
       </div>
 
-      {/* Add Food Button (only show if weekPlan is not empty) */}
       {weekPlan.length > 0 && (
   <div className="relative mt-8 flex justify-center items-center">
     <Button
@@ -145,7 +137,7 @@ const IndexPage = () => {
       className="bg-green-500 hover:bg-green-600 focus:outline-none py-3 px-6 rounded-md text-white shadow-md absolute"
       style={{
         backgroundColor: '#29b260',
-        bottom: '35rem', // Adjust this value as needed for vertical positioning
+        bottom: '35rem', 
       }}
     >
       Add Food
@@ -158,7 +150,6 @@ const IndexPage = () => {
 
 
 
-      {/* Display User Data */}
       {userData && (
         <div className="mt-8">
           <h3 className="text-xl font-semibold mb-2">Submitted User Data:</h3>

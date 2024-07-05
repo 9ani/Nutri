@@ -256,13 +256,11 @@ class GptService implements GptServiceInterface {
 
       const updateFields: any = {};
 
-      // Function to convert nutrient values to numbers
       const convertToNumber = (value: string): number => {
         const extractedNumber = parseFloat(value.replace(/[^\d.-]/g, ""));
         return isNaN(extractedNumber) ? 0 : extractedNumber;
       };
 
-      // Update fields based on nutritionData
       if (nutritionData.calories) {
         console.log(`Adding calories: ${nutritionData.calories}`);
         updateFields["weekPlan.$.nutritionSummary.calories_filled"] =
@@ -377,7 +375,7 @@ class GptService implements GptServiceInterface {
       const updateResult = await WeekPlanModel.findOneAndUpdate(
         { "weekPlan._id": dayPlan._id },
         { $set: updateFields },
-        { new: true } // Return the updated document
+        { new: true } 
       );
 
       if (!updateResult) {

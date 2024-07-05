@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import Spinner from "react-bootstrap/Spinner"; // Import Spinner for loading indicator
+import Spinner from "react-bootstrap/Spinner"; 
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
@@ -23,7 +23,7 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
     e.preventDefault();
 
     try {
-      setLoading(true); // Set loading state to true while submitting
+      setLoading(true); 
 
       const formData = new FormData();
       formData.append("photo", photo);
@@ -40,7 +40,7 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
 
         if (data && data.updatedWeekPlan && data.updatedWeekPlan) {
           localStorage.setItem("weekPlan", JSON.stringify(data.updatedWeekPlan.weekPlan));
-          // updateNutritionData(data.fullUpdatedWeekPlan.weekPlan); // Call the callback to update nutrition data in main page
+          // updateNutritionData(data.fullUpdatedWeekPlan.weekPlan); 
         } else {
           console.error("Missing week plan data in response:", data);
         }
@@ -53,7 +53,7 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
       console.error("Error adding food:", error);
       setError(error.message);
     } finally {
-      setLoading(false); // Set loading state back to false after request completes
+      setLoading(false); 
     }
   };
 
