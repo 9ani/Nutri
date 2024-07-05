@@ -5,7 +5,17 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import ModalComponent from "../components/Modal";
 import AddFoodModal from "../components/AddFoodModal";
-import 'bootstrap/dist/css/bootstrap.min.css';
+import Header from "../components/Header"; // Assuming you have a Header component
+import "bootstrap/dist/css/bootstrap.min.css";
+import Image from "next/image";
+/* You can add this in your Tailwind CSS configuration file or a global stylesheet */
+<style jsx>{`
+  .card-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+`}</style>
 
 const IndexPage = () => {
   const [weekPlan, setWeekPlan] = useState([]);
@@ -39,83 +49,114 @@ const IndexPage = () => {
   };
 
   return (
-    <div className="container mx-auto mt-5">
+    <div className="">
       {/* Header */}
-      <header className="text-center mb-8">
-        <h1 className="text-3xl font-bold">Nutrition Tracker</h1>
-      </header>
-
-      {/* Landing Page or Week Plan Cards */}
-      {weekPlan.length === 0 ? (
-        <div className="text-center mt-12">
-          <input
-            type="text"
-            value={userString}
-            onChange={(e) => setUserString(e.target.value)}
-            placeholder="Enter your prompt (save as userString)"
-            className="border border-gray-300 px-4 py-2 rounded-lg shadow-sm focus:outline-none focus:border-blue-500"
-          />
-          <br />
-          <br />
-          <button
-            onClick={handleButtonClick}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-600 focus:outline-none"
-          >
-            Open Modal
-          </button>
-          <ModalComponent
-            isOpen={modalIsOpen}
-            closeModal={() => setModalIsOpen(false)}
-            userString={userString}
-            setWeekPlan={setWeekPlan}
-          />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {weekPlan.map((dayPlan) => (
-            <div
-              key={dayPlan.date}
-              className={`col-span-1 mb-4 ${
-                dayPlan.date === today
-                  ? "lg:col-span-2 lg:col-start-2"
-                  : "lg:col-span-1"
-              }`}
-              onClick={() => handleCardClick(dayPlan)}
-              style={{ cursor: "pointer" }}
-            >
-              <Card>
-                <Card.Body>
-                  <Card.Title>{dayPlan.date} - {dayPlan.day}</Card.Title>
-                  <div className="mb-3">Progress</div>
-                  <ProgressBar
-                    now={calculatePercentage(
-                      dayPlan.nutritionSummary?.calories_filled || 0,
-                      dayPlan.nutritionSummary?.calories || 100
-                    )}
-                    label={`Calories ${dayPlan.nutritionSummary?.calories_filled || 0}/${dayPlan.nutritionSummary?.calories || 100}`}
-                    max={100}
-                  />
-                  {/* Add other nutrient progress bars similarly if needed */}
-                </Card.Body>
-              </Card>
+      <Header />
+      
+      {/* Landing Page Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {weekPlan.length === 0 && (
+          <>
+            {/* Left Side: Input Section */}
+            <div className="col-span-1 lg:col-span-1 flex-column justify-center mt-[300px] ml-[200px]">
+              <h2 className="text-4xl font-bold mb-4">Nutrition Ration Planner</h2>
+              <div className="text-center flex  p-1 gap-[20px] h-[60px]">
+                <input
+                  type="text"
+                  value={userString}
+                  onChange={(e) => setUserString(e.target.value)}
+                  placeholder="Give me a ration"
+                  className="border border-gray-300 px-4 py-2 rounded-lg shadow-sm focus:outline-none focus:border-blue-500  w-[300px]"
+                />
+                <br />
+                <br />
+                <button
+                  onClick={handleButtonClick}
+                  className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-green-600 focus:outline-none"
+                >
+                  Get ration
+                </button>
+              </div>
+              <h4 className="mt-4 text-lg font-medium">
+                Enter your dietary preferences to generate meal plan.
+              </h4>{" "}
+              <ModalComponent
+                isOpen={modalIsOpen}
+                closeModal={() => setModalIsOpen(false)}
+                userString={userString}
+                setWeekPlan={setWeekPlan}
+              />
             </div>
-          ))}
-        </div>
-      )}
+
+            {/* Right Side: Image */}
+            <div className=" lg:block lg:col-span-1 relative h-[500px] mt-[100px] mr-[100px] b">
+              <Image
+                src="/bg.avif"
+                alt="landing"
+                layout="fill"
+                objectFit="cover"
+                className="rounded-3xl"
+              />
+            </div>
+          </>
+        )}
+        {/* Render Week Plan Cards if Available */}
+        {weekPlan.length > 0 &&
+  weekPlan.map((dayPlan) => (
+    <div
+      key={dayPlan.date}
+      className="mx-auto w-full lg:w-1/2 mb-4 px-4 mt-3"
+      onClick={() => handleCardClick(dayPlan)}
+      style={{ cursor: "pointer" }}
+    >
+      <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+        <h3 className="text-2xl font-bold mb-3 text-center">{dayPlan.date} - {dayPlan.day}</h3>
+        <div className="mb-3 text-center">Progress</div>
+        <ProgressBar
+          now={calculatePercentage(
+            dayPlan.nutritionSummary?.calories_filled || 0,
+            dayPlan.nutritionSummary?.calories || 100
+          )}
+          label={`Calories ${
+            dayPlan.nutritionSummary?.calories_filled || 0
+          }/${dayPlan.nutritionSummary?.calories || 100}`}
+          max={100}
+          striped
+          animated={dayPlan.date === today}
+          variant={dayPlan.date === today ? "success" : "info"}
+          className="mb-3"
+        />
+        {/* Add other nutrient progress bars similarly if needed */}
+      </div>
+    </div>
+  ))}
+
+
+
+
+      </div>
 
       {/* Add Food Button (only show if weekPlan is not empty) */}
       {weekPlan.length > 0 && (
-        <div className="flex justify-center mt-8">
-          <Button
-            variant="primary"
-            onClick={handleShow}
-            className="bg-blue-500 hover:bg-blue-600 focus:outline-none"
-          >
-            Add Food
-          </Button>
-          <AddFoodModal show={showModal} handleClose={handleClose} />
-        </div>
-      )}
+  <div className="relative mt-8 flex justify-center items-center">
+    <Button
+      variant="primary"
+      onClick={handleShow}
+      className="bg-green-500 hover:bg-green-600 focus:outline-none py-3 px-6 rounded-md text-white shadow-md absolute"
+      style={{
+        backgroundColor: '#29b260',
+        bottom: '35rem', // Adjust this value as needed for vertical positioning
+      }}
+    >
+      Add Food
+    </Button>
+    <AddFoodModal show={showModal} handleClose={handleClose} />
+  </div>
+)}
+
+
+
+
 
       {/* Display User Data */}
       {userData && (

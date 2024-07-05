@@ -211,14 +211,15 @@ class GptService implements GptServiceInterface {
         const nutritionData = await this.getNutrition(dishName);
 
         fs.unlinkSync(photo.path);
-        const updatedWeekPlan = await this.updateNutritionToWeekPlan(nutritionData);
-    console.log("Updated Week Plan:", updatedWeekPlan);
+        const updatedWeekPlan = await this.updateNutritionToWeekPlan(
+          nutritionData
+        );
+        console.log("Updated Week Plan:", updatedWeekPlan);
 
         return {
           foodAnalysis,
           nutritionData,
           updatedWeekPlan,
-
         };
       } else {
         console.error(
@@ -233,93 +234,156 @@ class GptService implements GptServiceInterface {
   }
   private async updateNutritionToWeekPlan(nutritionData: any): Promise<any> {
     try {
-      const recentWeekPlan = await WeekPlanModel.findOne().sort({ createdAt: -1 });
+      const recentWeekPlan = await WeekPlanModel.findOne().sort({
+        createdAt: -1,
+      });
       console.log("Recent Week Plan:", recentWeekPlan);
       if (!recentWeekPlan) {
         throw new Error("No week plan found");
       }
-  
-      const today = new Date().toISOString().split('T')[0];
+
+      const today = new Date().toISOString().split("T")[0];
       console.log("Today's Date:", today);
       const dayPlan = recentWeekPlan.weekPlan.find((day: any) => {
-        const planDate = new Date(day.date).toISOString().split('T')[0];
+        const planDate = new Date(day.date).toISOString().split("T")[0];
         return planDate === today;
       });
       console.log("Day Plan:", dayPlan);
-  
+
       if (!dayPlan) {
         throw new Error("No day plan found for today");
       }
-  
+
       const updateFields: any = {};
-  
+
       // Function to convert nutrient values to numbers
       const convertToNumber = (value: string): number => {
-        const extractedNumber = parseFloat(value.replace(/[^\d.-]/g, ''));
+        const extractedNumber = parseFloat(value.replace(/[^\d.-]/g, ""));
         return isNaN(extractedNumber) ? 0 : extractedNumber;
       };
-  
+
       // Update fields based on nutritionData
       if (nutritionData.calories) {
         console.log(`Adding calories: ${nutritionData.calories}`);
-        updateFields['weekPlan.$.nutritionSummary.calories_filled'] = dayPlan.nutritionSummary.calories_filled + Number(nutritionData.calories);
+        updateFields["weekPlan.$.nutritionSummary.calories_filled"] =
+          dayPlan.nutritionSummary.calories_filled +
+          Number(nutritionData.calories);
       }
-  
-      if (nutritionData.totalNutrients.VITA_RAE && nutritionData.totalNutrients.VITA_RAE.quantity) {
-        console.log(`Adding vitamin A: ${nutritionData.totalNutrients.VITA_RAE.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminA_filled'] = dayPlan.nutritionSummary.vitamins.vitaminA_filled + (nutritionData.totalNutrients.VITA_RAE.quantity);
+
+      if (
+        nutritionData.totalNutrients.VITA_RAE &&
+        nutritionData.totalNutrients.VITA_RAE.quantity
+      ) {
+        console.log(
+          `Adding vitamin A: ${nutritionData.totalNutrients.VITA_RAE.quantity}`
+        );
+        updateFields["weekPlan.$.nutritionSummary.vitamins.vitaminA_filled"] =
+          dayPlan.nutritionSummary.vitamins.vitaminA_filled +
+          nutritionData.totalNutrients.VITA_RAE.quantity;
       }
-  
-      if (nutritionData.totalNutrients.VITC && nutritionData.totalNutrients.VITC.quantity) {
-        console.log(`Adding vitamin C: ${nutritionData.totalNutrients.VITC.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminC_filled'] = dayPlan.nutritionSummary.vitamins.vitaminC_filled + (nutritionData.totalNutrients.VITC.quantity);
+
+      if (
+        nutritionData.totalNutrients.VITC &&
+        nutritionData.totalNutrients.VITC.quantity
+      ) {
+        console.log(
+          `Adding vitamin C: ${nutritionData.totalNutrients.VITC.quantity}`
+        );
+        updateFields["weekPlan.$.nutritionSummary.vitamins.vitaminC_filled"] =
+          dayPlan.nutritionSummary.vitamins.vitaminC_filled +
+          nutritionData.totalNutrients.VITC.quantity;
       }
-  
-      if (nutritionData.totalNutrients.VITB6A && nutritionData.totalNutrients.VITB6A.quantity) {
-        console.log(`Adding vitamin B: ${nutritionData.totalNutrients.VITB6A.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.vitamins.vitaminB_filled'] = dayPlan.nutritionSummary.vitamins.vitaminB_filled + (nutritionData.totalNutrients.VITB6A.quantity);
+
+      if (
+        nutritionData.totalNutrients.VITB6A &&
+        nutritionData.totalNutrients.VITB6A.quantity
+      ) {
+        console.log(
+          `Adding vitamin B: ${nutritionData.totalNutrients.VITB6A.quantity}`
+        );
+        updateFields["weekPlan.$.nutritionSummary.vitamins.vitaminB_filled"] =
+          dayPlan.nutritionSummary.vitamins.vitaminB_filled +
+          nutritionData.totalNutrients.VITB6A.quantity;
       }
-  
-      if (nutritionData.totalNutrients.CA && nutritionData.totalNutrients.CA.quantity) {
-        console.log(`Adding calcium: ${nutritionData.totalNutrients.CA.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.minerals.calcium_filled'] = dayPlan.nutritionSummary.minerals.calcium_filled + (nutritionData.totalNutrients.CA.quantity);
+
+      if (
+        nutritionData.totalNutrients.CA &&
+        nutritionData.totalNutrients.CA.quantity
+      ) {
+        console.log(
+          `Adding calcium: ${nutritionData.totalNutrients.CA.quantity}`
+        );
+        updateFields["weekPlan.$.nutritionSummary.minerals.calcium_filled"] =
+          dayPlan.nutritionSummary.minerals.calcium_filled +
+          nutritionData.totalNutrients.CA.quantity;
       }
-  
-      if (nutritionData.totalNutrients.FE && nutritionData.totalNutrients.FE.quantity) {
+
+      if (
+        nutritionData.totalNutrients.FE &&
+        nutritionData.totalNutrients.FE.quantity
+      ) {
         console.log(`Adding iron: ${nutritionData.totalNutrients.FE.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.minerals.iron_filled'] = dayPlan.nutritionSummary.minerals.iron_filled + (nutritionData.totalNutrients.FE.quantity);
+        updateFields["weekPlan.$.nutritionSummary.minerals.iron_filled"] =
+          dayPlan.nutritionSummary.minerals.iron_filled +
+          nutritionData.totalNutrients.FE.quantity;
       }
-  
-      if (nutritionData.totalNutrients.MG && nutritionData.totalNutrients.MG.quantity) {
-        console.log(`Adding magnesium: ${nutritionData.totalNutrients.MG.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.minerals.magnesium_filled'] = dayPlan.nutritionSummary.minerals.magnesium_filled + (nutritionData.totalNutrients.MG.quantity);
+
+      if (
+        nutritionData.totalNutrients.MG &&
+        nutritionData.totalNutrients.MG.quantity
+      ) {
+        console.log(
+          `Adding magnesium: ${nutritionData.totalNutrients.MG.quantity}`
+        );
+        updateFields["weekPlan.$.nutritionSummary.minerals.magnesium_filled"] =
+          dayPlan.nutritionSummary.minerals.magnesium_filled +
+          nutritionData.totalNutrients.MG.quantity;
       }
-  
-      if (nutritionData.totalNutrients.PROCNT && nutritionData.totalNutrients.PROCNT.quantity) {
-        console.log(`Adding protein: ${nutritionData.totalNutrients.PROCNT.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.protein_filled'] = dayPlan.nutritionSummary.protein_filled + (nutritionData.totalNutrients.PROCNT.quantity);
+
+      if (
+        nutritionData.totalNutrients.PROCNT &&
+        nutritionData.totalNutrients.PROCNT.quantity
+      ) {
+        console.log(
+          `Adding protein: ${nutritionData.totalNutrients.PROCNT.quantity}`
+        );
+        updateFields["weekPlan.$.nutritionSummary.protein_filled"] =
+          dayPlan.nutritionSummary.protein_filled +
+          nutritionData.totalNutrients.PROCNT.quantity;
       }
-  
-      if (nutritionData.totalNutrients.CHOCDF && nutritionData.totalNutrients.CHOCDF.quantity) {
-        console.log(`Adding carbohydrates: ${nutritionData.totalNutrients.CHOCDF.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.carbohydrates_filled'] = dayPlan.nutritionSummary.carbohydrates_filled + (nutritionData.totalNutrients.CHOCDF.quantity);
+
+      if (
+        nutritionData.totalNutrients.CHOCDF &&
+        nutritionData.totalNutrients.CHOCDF.quantity
+      ) {
+        console.log(
+          `Adding carbohydrates: ${nutritionData.totalNutrients.CHOCDF.quantity}`
+        );
+        updateFields["weekPlan.$.nutritionSummary.carbohydrates_filled"] =
+          dayPlan.nutritionSummary.carbohydrates_filled +
+          nutritionData.totalNutrients.CHOCDF.quantity;
       }
-  
-      if (nutritionData.totalNutrients.FAT && nutritionData.totalNutrients.FAT.quantity) {
+
+      if (
+        nutritionData.totalNutrients.FAT &&
+        nutritionData.totalNutrients.FAT.quantity
+      ) {
         console.log(`Adding fat: ${nutritionData.totalNutrients.FAT.quantity}`);
-        updateFields['weekPlan.$.nutritionSummary.fats_filled'] = dayPlan.nutritionSummary.fats_filled + (nutritionData.totalNutrients.FAT.quantity);
+        updateFields["weekPlan.$.nutritionSummary.fats_filled"] =
+          dayPlan.nutritionSummary.fats_filled +
+          nutritionData.totalNutrients.FAT.quantity;
       }
-  
+
       const updateResult = await WeekPlanModel.findOneAndUpdate(
-        { 'weekPlan._id': dayPlan._id },
+        { "weekPlan._id": dayPlan._id },
         { $set: updateFields },
-        { new: true }  // Return the updated document
+        { new: true } // Return the updated document
       );
-  
+
       if (!updateResult) {
         throw new Error("Failed to update week plan");
       }
-  
+
       console.log("Week plan updated with nutrition data");
       return updateResult;
     } catch (error) {
@@ -327,13 +391,7 @@ class GptService implements GptServiceInterface {
       throw new Error("Error saving nutrition to week plan");
     }
   }
-  
-  
-  
-  
-  
-  
-  
+
   async getNutrition(ingredient: string): Promise<any> {
     try {
       if (!EDAMAM_API_ID || !EDAMAM_API_KEY) {
@@ -351,7 +409,6 @@ class GptService implements GptServiceInterface {
       };
 
       const response = await axios.get(url, { params });
-      console.log(params);
       console.log(response.data);
       return response.data;
     } catch (error: any) {
@@ -360,7 +417,7 @@ class GptService implements GptServiceInterface {
     }
   }
 }
-
+console.log(new Date().toISOString().slice(0, 10));
 const systemPrompt = `You are a professional nutritionist providing personalized nutrition plans. Based on the user's data such as age, weight, allergies, and dietary preferences, you will generate a comprehensive daily meal plan for a week. 
 Provide meals that are popular in Central Asia, including countries like Russia and Kazakhstan. The plan should include all necessary vitamins and nutrients, ensuring a balanced diet.
 Even if the user has specific dietary restrictions, you should provide a suitable alternative. Even if the user asks for a ration for a day,
