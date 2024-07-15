@@ -1,12 +1,27 @@
-import Modal from "../components/Modal"; 
+// import Modal from "../components/Modal"; 
+// import "../styles/globals.css";
+
+// function MyApp({ Component, pageProps }) {
+//   return (
+//     <div>
+//       <Modal />
+      
+//       <Component {...pageProps} />
+      
+//     </div>
+//   )
+// }
+
+// export default MyApp
+
+import { SessionProvider } from "next-auth/react";
 import "../styles/globals.css";
 
-function MyApp({ Component, pageProps }) {
+function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   return (
-    <div>
-      <Modal />
+    <SessionProvider session={session}>
       <Component {...pageProps} />
-    </div>
+    </SessionProvider>
   );
 }
 

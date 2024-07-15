@@ -1,20 +1,57 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import ProgressBar from "react-bootstrap/ProgressBar";
-import Card from "react-bootstrap/Card";
+
+import {
+  CircularProgressbarWithChildren,
+  buildStyles,
+} from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 import Button from "react-bootstrap/Button";
-import ModalComponent from "../components/Modal";
 import AddFoodModal from "../components/AddFoodModal";
-import Header from "../components/Header"; 
+import AddMenuModal from "../components/AddMenuModal";
+import ModalComponent from "../components/Modal";
+import Header from "../components/Header";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Image from "next/image";
-<style jsx>{`
-  .card-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-`}</style>
+import MuiAccordion from "@mui/material/Accordion";
+import MuiAccordionSummary from "@mui/material/AccordionSummary";
+import MuiAccordionDetails from "@mui/material/AccordionDetails";
+import Typography from "@mui/material/Typography";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { styled } from "@mui/material/styles";
+import Flicking, { ViewportSlot } from "@egjs/react-flicking";
+import { Pagination } from "@egjs/flicking-plugins";
+import "@egjs/flicking/dist/flicking.css";
+import "@egjs/flicking-plugins/dist/pagination.css";
+import { Flat, Heat, Nested } from "@alptugidin/react-circular-progress-bar";
+
+const Accordion = styled(MuiAccordion)(({ theme }) => ({
+  border: `1px solid ${theme.palette.divider}`,
+  "&:not(:last-child)": {
+    borderBottom: 0,
+  },
+  "&::before": {
+    display: "none",
+  },
+}));
+const AccordionSummary = styled(MuiAccordionSummary)(({ theme }) => ({
+  backgroundColor:
+    theme.palette.mode === "dark"
+      ? "rgba(255, 255, 255, .05)"
+      : "rgba(0, 0, 0, .03)",
+  flexDirection: "row-reverse",
+  "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
+    transform: "rotate(90deg)",
+  },
+  "& .MuiAccordionSummary-content": {
+    marginLeft: theme.spacing(1),
+  },
+}));
+
+const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
+  padding: theme.spacing(2),
+  borderTop: "1px solid rgba(0, 0, 0, .125)",
+}));
 
 const IndexPage = () => {
   const [weekPlan, setWeekPlan] = useState([]);
@@ -22,8 +59,18 @@ const IndexPage = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [userData, setUserData] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showModal1, setShowModal1] = useState(false);
+const [todaysNutrition, setTodaysNutrition] = useState({});
+  const [todaysFood, setTodaysFood] = useState([]);
+  const [expanded, setExpanded] = useState(false);
   const router = useRouter();
   const today = new Date().toISOString().split("T")[0];
+  const plugins = [new Pagination({ type: "scroll" })];
+
+  const calculatePercentage = (filled, max) => {
+    if (max === 0) return 0;
+    return Math.min((filled / max) * 100, 100);
+  };
 
   useEffect(() => {
     const savedWeekPlan = localStorage.getItem("weekPlan");
@@ -31,51 +78,121 @@ const IndexPage = () => {
       setWeekPlan(JSON.parse(savedWeekPlan));
     }
   }, []);
+  const calculateNutritionNeeded = (nutritionSummary) => {
+    return {
+      calories_needed:
+        (nutritionSummary.calories || 0) -
+        (nutritionSummary.calories_filled || 0),
+      protein_needed:
+        (nutritionSummary.protein || 0) -
+        (nutritionSummary.protein_filled || 0),
+      fats_needed:
+        (nutritionSummary.fats || 0) - (nutritionSummary.fats_filled || 0),
+      carbs_needed:
+        (nutritionSummary.carbohydrates || 0) -
+        (nutritionSummary.carbohydrates_filled || 0),
+    };
+  };
+  
+  useEffect(() => {
+    if (weekPlan.length > 0) {
+      getTodaysFoodAndNutrition(weekPlan, today).then(({ todaysFood, todaysNutrition }) => {
+        setTodaysFood(todaysFood);
+        setTodaysNutrition(todaysNutrition);
+        console.log("todaysFood:", todaysFood);
+        console.log("todaysNutrition:", todaysNutrition);
+      });
+    }
+  }, [weekPlan, today]);
 
-  const handleShow = () => setShowModal(true);
-  const handleClose = () => setShowModal(false);
-  const handleButtonClick = () => setModalIsOpen(true);
+
+  const handleShow = () => {
+    setShowModal(true);
+  };
+  const handleShow1 = () => {
+    setShowModal1(true);
+  };
+  const handleClose = () => {
+    setShowModal(false);
+  };
+  const handleClose1 = () => {
+    setShowModal1(false);
+  };
+
+  const handleButtonClick = () => {
+    setModalIsOpen(true);
+  };
 
   const handleCardClick = (dayPlan) => {
+    console.log(dayPlan.nutritionSummary?.calories_filled);
+    console.log(dayPlan.nutritionSummary?.protein_filled);
+    console.log(dayPlan.nutritionSummary?.fats_filled);
     router.push({
       pathname: `/day/${dayPlan.date}`,
       query: { dayPlan: JSON.stringify(dayPlan) },
     });
   };
 
-  const calculatePercentage = (filled, max) => {
-    return (filled / max) * 100;
+  const updateNutritionData = (updatedWeekPlan) => {
+    setWeekPlan(updatedWeekPlan);
+    localStorage.setItem("weekPlan", JSON.stringify(updatedWeekPlan));
+  };
+  const getTodaysFoodAndNutrition = async (weekPlan, today) => {
+    try {
+      const todayPlan = weekPlan.find((dayPlan) => dayPlan.date === today);
+      if (todayPlan) {
+        const todaysFood = todayPlan.meals;
+        const todaysNutrition = todayPlan.nutritionSummary;
+        return { todaysFood, todaysNutrition };
+      } else {
+        return { todaysFood: null, todaysNutrition: null };
+      }
+    } catch (error) {
+      console.error("Error getting today's food and nutrition:", error);
+      return { todaysFood: null, todaysNutrition: null };
+    }
+  };
+  const handleChange = (panel) => (event, isExpanded) => {
+    setExpanded(isExpanded ? panel : false);
   };
 
+  useEffect(() => {
+    console.log("showModal state:", showModal);
+  }, [showModal]);
+
+  useEffect(() => {
+    console.log("weekPlan:", weekPlan);
+  }, [weekPlan]);
+
   return (
-    <div className="">
-      <Header />
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className={"mainContainer" + (weekPlan.length === 0 ? "" : " user")}>
+      <Header
+        weekPlanLength={weekPlan.length}
+        handleShow={handleShow}
+        handleShow1={handleShow1}
+      />
+      <div className="gridContainer1">
         {weekPlan.length === 0 && (
           <>
-            <div className="col-span-1 lg:col-span-1 flex-column justify-center mt-[300px] ml-[200px]">
-              <h2 className="text-4xl font-bold mb-4">Nutrition Ration Planner</h2>
-              <div className="text-center flex  p-1 gap-[20px] h-[60px]">
+            <div className="introContainer">
+              <h2 className="title">Cоставление рациона питания</h2>
+              <h4 className="description">
+                Введите свои диетические предпочтения, чтобы составить план
+                питания.
+              </h4>
+              <div className="inputContainer">
                 <input
                   type="text"
                   value={userString}
                   onChange={(e) => setUserString(e.target.value)}
-                  placeholder="Give me a ration"
-                  className="border border-gray-300 px-4 py-2 rounded-lg shadow-sm focus:outline-none focus:border-blue-500  w-[300px]"
+                  placeholder="Выдай мне рацион"
+                  className="inputField"
                 />
-                <br />
-                <br />
-                <button
-                  onClick={handleButtonClick}
-                  className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-green-600 focus:outline-none"
-                >
-                  Get ration
+                <button onClick={handleButtonClick} className="getRationButton">
+                  Создать
                 </button>
               </div>
-              <h4 className="mt-4 text-lg font-medium">
-                Enter your dietary preferences to generate meal plan.
-              </h4>{" "}
+
               <ModalComponent
                 isOpen={modalIsOpen}
                 closeModal={() => setModalIsOpen(false)}
@@ -84,80 +201,161 @@ const IndexPage = () => {
               />
             </div>
 
-            <div className=" lg:block lg:col-span-1 relative h-[500px] mt-[100px] mr-[100px] b">
+            <div className="landingImageContainer">
               <Image
-                src="/bg.avif"
+                src="/images/landing1.png"
                 alt="landing"
-                layout="fill"
                 objectFit="cover"
-                className="rounded-3xl"
+                className="landingImage"
+                width={650}
+                height={725}
               />
             </div>
           </>
         )}
-        {weekPlan.length > 0 &&
-  weekPlan.map((dayPlan) => (
-    <div
-      key={dayPlan.date}
-      className="mx-auto w-full lg:w-1/2 mb-4 px-4 mt-3"
-      onClick={() => handleCardClick(dayPlan)}
-      style={{ cursor: "pointer" }}
-    >
-      <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-        <h3 className="text-2xl font-bold mb-3 text-center">{dayPlan.date} - {dayPlan.day}</h3>
-        <div className="mb-3 text-center">Progress</div>
-        <ProgressBar
-          now={calculatePercentage(
-            dayPlan.nutritionSummary?.calories_filled || 0,
-            dayPlan.nutritionSummary?.calories || 100
+      </div>
+      <div className="gridContainer2">
+        <div className="gridContainer-item">
+          <h2>Рекомендованные блюда:</h2>
+          {todaysFood && todaysFood.length > 0 ? (
+            <div>
+              {todaysFood.map((food, index) => (
+                <Accordion
+                  key={index}
+                  expanded={expanded === `panel${index + 1}`}
+                  onChange={handleChange(`panel${index + 1}`)}
+                >
+                  <AccordionSummary
+                    aria-controls={`panel${index + 1}d-content`}
+                    id={`panel${index + 1}d-header`}
+                  >
+                    <Typography>{food.meal}</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Typography>{food.description}</Typography>
+                    {food.img_url && (
+                      <img
+                        src={food.img_url}
+                        alt={food.meal}
+                        style={{ maxWidth: "100%", marginTop: "10px" }}
+                      />
+                    )}
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+            </div>
+          ) : (
+            <p>No food items available for today.</p>
           )}
-          label={`Calories ${
-            dayPlan.nutritionSummary?.calories_filled || 0
-          }/${dayPlan.nutritionSummary?.calories || 100}`}
-          max={100}
-          striped
-          animated={dayPlan.date === today}
-          variant={dayPlan.date === today ? "success" : "info"}
-          className="mb-3"
-        />
-      </div>
-    </div>
-  ))}
-
-
-
-
-      </div>
-
-      {weekPlan.length > 0 && (
-  <div className="relative mt-8 flex justify-center items-center">
-    <Button
-      variant="primary"
-      onClick={handleShow}
-      className="bg-green-500 hover:bg-green-600 focus:outline-none py-3 px-6 rounded-md text-white shadow-md absolute"
-      style={{
-        backgroundColor: '#29b260',
-        bottom: '35rem', 
-      }}
-    >
-      Add Food
-    </Button>
-    <AddFoodModal show={showModal} handleClose={handleClose} />
-  </div>
-)}
-
-
-
-
-
-      {userData && (
-        <div className="mt-8">
-          <h3 className="text-xl font-semibold mb-2">Submitted User Data:</h3>
-          <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto">
-            {JSON.stringify(userData, null, 2)}
-          </pre>
         </div>
-      )}
+        <div className="gridContainer-item">
+          {weekPlan.length > 0 && (
+            <Flicking circular={true} plugins={plugins}>
+              {weekPlan.map((dayPlan) => (
+                <div
+                  key={dayPlan.date}
+                  className="dayPlanCard card-panel"
+                  onClick={() => handleCardClick(dayPlan)}
+                  style={{
+                    cursor: "pointer",
+                    margin: "0 25px",
+                    border: "2px solid #28511D",
+                    borderRadius: "10px",
+                  }}
+                >
+                  <div className="cardContent" style={{ padding: "20px" }}>
+                    <h3 className="cardTitle">
+                      {dayPlan.date} - {dayPlan.day}
+                    </h3>
+                    <div className="progressLabel">Progress</div>
+                    <div className="progressBarContainer">
+                      <Nested
+                        circles={[
+                          {
+                            text: "Калории",
+                            value: calculatePercentage(
+                              dayPlan.nutritionSummary?.calories_filled || 0,
+                              dayPlan.nutritionSummary?.calories || 100
+                            ),
+                            color: "#28511D",
+                          },
+                          {
+                            text: "Белки",
+                            value: calculatePercentage(
+                              dayPlan.nutritionSummary?.protein_filled || 0,
+                              dayPlan.nutritionSummary?.protein || 100
+                            ),
+                            color: "#0ea5e9",
+                          },
+                          {
+                            text: "Жиры",
+                            value: calculatePercentage(
+                              dayPlan.nutritionSummary?.fats_filled || 0,
+                              dayPlan.nutritionSummary?.fat || 100
+                            ),
+                            color: "#c2410c",
+                          },
+                          {
+                            text: "Углеводы",
+                            value: calculatePercentage(
+                              dayPlan.nutritionSummary?.carbohydrates_filled ||
+                                0,
+                              dayPlan.nutritionSummary?.carbs || 100
+                            ),
+                            color: "#7c3aed",
+                          },
+                        ]}
+                        sx={{
+                          bgColor: "#cbd5e1",
+                          fontWeight: "bold",
+                          fontFamily: "Trebuchet MS",
+                          strokeLinecap: "round",
+                          loadingTime: 1000,
+                          valueAnimation: true,
+                          intersectionEnabled: true,
+                        }}
+                      />
+                      <div className="progressText">
+                        <strong>
+                          {calculatePercentage(
+                            dayPlan.nutritionSummary?.calories_filled || 0,
+                            dayPlan.nutritionSummary?.calories || 100
+                          ).toFixed(0)}
+                          %
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <ViewportSlot>
+                <div className="flicking-pagination"></div>
+              </ViewportSlot>
+            </Flicking>
+          )}
+        </div>
+      </div>
+      {/* {weekPlan.length > 0 && (
+        <div className="addButtonContainer">
+          <Button
+            variant="primary"
+            onClick={handleShow}
+            style={{ backgroundColor: "#28511D" }}
+          >
+            Добавить прием пищи
+          </Button>
+        </div>
+      )} */}
+      <AddFoodModal
+        show={showModal}
+        handleClose={handleClose}
+        updateNutritionData={updateNutritionData}
+      />
+       <AddMenuModal
+        show1={showModal1}
+        handleClose1={handleClose1}
+        nutritionNeeded={calculateNutritionNeeded(todaysNutrition)}
+      />
     </div>
   );
 };

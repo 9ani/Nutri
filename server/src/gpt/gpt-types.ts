@@ -18,6 +18,7 @@ interface MulterFile {
 interface Meal {
   meal: string;
   description: string;
+  img_url: string;
 }
 
 interface NutritionSummary {

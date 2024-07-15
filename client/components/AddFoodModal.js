@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import Spinner from "react-bootstrap/Spinner"; 
+import Spinner from "react-bootstrap/Spinner";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
@@ -23,7 +23,8 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
     e.preventDefault();
 
     try {
-      setLoading(true); 
+      setLoading(true);
+      setError(null);
 
       const formData = new FormData();
       formData.append("photo", photo);
@@ -38,29 +39,32 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
         console.log("Food added successfully!");
         const data = await response.json();
 
-        if (data && data.updatedWeekPlan && data.updatedWeekPlan) {
-          localStorage.setItem("weekPlan", JSON.stringify(data.updatedWeekPlan.weekPlan));
-          // updateNutritionData(data.fullUpdatedWeekPlan.weekPlan); 
+        if (data && data.updatedWeekPlan) {
+          updateNutritionData(data.updatedWeekPlan.weekPlan);
+          handleClose();
         } else {
-          console.error("Missing week plan data in response:", data);
+          throw new Error("Missing week plan data in response");
         }
-
-        handleClose();
       } else {
-        console.error("Failed to add food.");
+        throw new Error("Failed to add food");
       }
     } catch (error) {
       console.error("Error adding food:", error);
       setError(error.message);
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
   return (
-    <Modal show={show} onHide={handleClose}>
-      <Modal.Header closeButton style={ { display: "flex", justifyContent: "space-between", backgroundColor: "#29b260", color: "white" }}>
-        <Modal.Title style={ {marginRight:"50px"} }>Add Food</Modal.Title>
+    <Modal
+      show={show}
+      onHide={handleClose}
+      centered
+      size="lg"
+    >
+      <Modal.Header closeButton style={{ backgroundColor: "#29b260", color: "white" }}>
+        <Modal.Title>Add Food</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {loading ? (
@@ -68,30 +72,32 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
             <Spinner animation="border" role="status">
               <span className="visually-hidden">Loading...</span>
             </Spinner>
-            <p className="mt-2">Analyzing food...</p>
+            <p className="mt-2">Adding food...</p>
           </div>
         ) : (
           <Form onSubmit={handleSubmit}>
-            <Form.Group controlId="formFile" className="mb-3">
-              <Form.Label>Upload a photo of food</Form.Label>
-              <Form.Control type="file" onChange={handlePhotoChange} />
+            <Form.Group controlId="formPhoto" className="mb-3">
+              <Form.Label>Photo</Form.Label>
+              <Form.Control type="file" onChange={handlePhotoChange} accept="image/*" />
             </Form.Group>
+
             <Form.Group controlId="formDescription" className="mb-3">
-              <Form.Label>Or describe the food</Form.Label>
+              <Form.Label>Description</Form.Label>
               <Form.Control
-                as="textarea"
-                rows={3}
+                type="text"
                 value={description}
                 onChange={handleDescriptionChange}
+                placeholder="Enter food description"
               />
             </Form.Group>
-            <Button variant="primary" type="submit" style={{backgroundColor: "#29b260"}}>
+
+            {error && <p className="text-danger mb-3">{error}</p>}
+
+            <Button variant="primary" type="submit" style={{ backgroundColor: "#29b260", border: "none" }}>
               Submit
             </Button>
           </Form>
         )}
-
-        {error && <p className="text-danger">{error}</p>}
       </Modal.Body>
     </Modal>
   );
