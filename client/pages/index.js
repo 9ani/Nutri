@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-
+import { useSession } from "next-auth/react";
 import {
   CircularProgressbarWithChildren,
   buildStyles,
@@ -10,6 +10,8 @@ import Button from "react-bootstrap/Button";
 import AddFoodModal from "../components/AddFoodModal";
 import AddMenuModal from "../components/AddMenuModal";
 import ModalComponent from "../components/Modal";
+import LoginModal from "../components/LoginModal";
+
 import Header from "../components/Header";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Image from "next/image";
@@ -54,6 +56,8 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 }));
 
 const IndexPage = () => {
+  const { data: session, status } = useSession();
+
   const [weekPlan, setWeekPlan] = useState([]);
   const [userString, setUserString] = useState("");
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -63,6 +67,8 @@ const IndexPage = () => {
 const [todaysNutrition, setTodaysNutrition] = useState({});
   const [todaysFood, setTodaysFood] = useState([]);
   const [expanded, setExpanded] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   const router = useRouter();
   const today = new Date().toISOString().split("T")[0];
   const plugins = [new Pagination({ type: "scroll" })];
@@ -71,6 +77,12 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
     if (max === 0) return 0;
     return Math.min((filled / max) * 100, 100);
   };
+
+  // useEffect(() => {
+  //   if (status === "loading") return; // Do nothing while loading
+  //   if (!session) router.push('/auth/signin'); // Redirect if not logged in
+  // }, [session, status]);
+
 
   useEffect(() => {
     const savedWeekPlan = localStorage.getItem("weekPlan");
@@ -93,7 +105,11 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
         (nutritionSummary.carbohydrates_filled || 0),
     };
   };
-  
+  useEffect(() => {
+    if (session) {
+      console.log("User Data:", session.user);
+    }
+  }, [session]);
   useEffect(() => {
     if (weekPlan.length > 0) {
       getTodaysFoodAndNutrition(weekPlan, today).then(({ todaysFood, todaysNutrition }) => {
@@ -119,6 +135,12 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
     setShowModal1(false);
   };
 
+  const handleLogin = () => {
+    setShowLoginModal(true);
+  };
+  const closeLoginModal = () => {
+    setShowLoginModal(false);
+  };
   const handleButtonClick = () => {
     setModalIsOpen(true);
   };
@@ -170,6 +192,7 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
         weekPlanLength={weekPlan.length}
         handleShow={handleShow}
         handleShow1={handleShow1}
+        handleLogin={handleLogin}
       />
       <div className="gridContainer1">
         {weekPlan.length === 0 && (
@@ -356,6 +379,8 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
         handleClose1={handleClose1}
         nutritionNeeded={calculateNutritionNeeded(todaysNutrition)}
       />
+            <LoginModal isOpen={showLoginModal} closeModal={closeLoginModal} />
+
     </div>
   );
 };
