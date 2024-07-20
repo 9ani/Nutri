@@ -853,13 +853,6 @@
   dependencies:
     "@types/express" "*"
 
-"@types/puppeteer@^7.0.4":
-  version "7.0.4"
-  resolved "https://registry.yarnpkg.com/@types/puppeteer/-/puppeteer-7.0.4.tgz#6eb4081323e9075c1f4c353f93ee2ed6eed99487"
-  integrity sha512-ja78vquZc8y+GM2al07GZqWDKQskQXygCDiu0e3uO0DMRKqE0MjrFBFmTulfPYzLB6WnL7Kl2tFPy0WXSpPomg==
-  dependencies:
-    puppeteer "*"
-
 "@types/qs@*":
   version "6.9.15"
   resolved "https://registry.yarnpkg.com/@types/qs/-/qs-6.9.15.tgz#adde8a060ec9c305a82de1babc1056e73bd64dce"
@@ -3826,7 +3819,7 @@ puppeteer-core@22.13.1:
     devtools-protocol "0.0.1299070"
     ws "^8.18.0"
 
-puppeteer@*, puppeteer@^22.13.1:
+puppeteer@^22.13.1:
   version "22.13.1"
   resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-22.13.1.tgz#f8e4217919b438f18adb754e9d8414fef58fb3de"
   integrity sha512-PwXLDQK5u83Fm5A7TGMq+9BR7iHDJ8a3h21PSsh/E6VfhxiKYkU7+tvGZNSCap6k3pCNDd9oNteVBEctcBalmQ==

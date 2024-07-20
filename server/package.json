@@ -17,7 +17,6 @@
     "@google/generative-ai": "^0.14.0",
     "@huggingface/inference": "^2.7.0",
     "@types/multer": "^1.4.11",
-    "@types/puppeteer": "^7.0.4",
     "aws-sdk": "^2.1652.0",
     "axios": "^1.7.2",
     "cors": "^2.8.5",
