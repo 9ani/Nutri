@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef,useState } from "react";
 import { useRouter } from "next/router";
+import { useUser } from "@clerk/nextjs";
+
 import { useSession } from "next-auth/react";
 import {
   CircularProgressbarWithChildren,
@@ -10,7 +12,6 @@ import Button from "react-bootstrap/Button";
 import AddFoodModal from "../components/AddFoodModal";
 import AddMenuModal from "../components/AddMenuModal";
 import ModalComponent from "../components/Modal";
-import LoginModal from "../components/LoginModal";
 
 import Header from "../components/Header";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -22,9 +23,10 @@ import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { styled } from "@mui/material/styles";
 import Flicking, { ViewportSlot } from "@egjs/react-flicking";
-import { Pagination } from "@egjs/flicking-plugins";
+import {Pagination} from "@egjs/flicking-plugins";
+import { Arrow } from "@egjs/flicking-plugins";
 import "@egjs/flicking/dist/flicking.css";
-import "@egjs/flicking-plugins/dist/pagination.css";
+import "@egjs/flicking-plugins/dist/arrow.css";
 import { Flat, Heat, Nested } from "@alptugidin/react-circular-progress-bar";
 
 const Accordion = styled(MuiAccordion)(({ theme }) => ({
@@ -36,6 +38,7 @@ const Accordion = styled(MuiAccordion)(({ theme }) => ({
     display: "none",
   },
 }));
+
 const AccordionSummary = styled(MuiAccordionSummary)(({ theme }) => ({
   backgroundColor:
     theme.palette.mode === "dark"
@@ -56,22 +59,29 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 }));
 
 const IndexPage = () => {
-  const { data: session, status } = useSession();
-
   const [weekPlan, setWeekPlan] = useState([]);
   const [userString, setUserString] = useState("");
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [userData, setUserData] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showModal1, setShowModal1] = useState(false);
-const [todaysNutrition, setTodaysNutrition] = useState({});
+  const [todaysNutrition, setTodaysNutrition] = useState({});
   const [todaysFood, setTodaysFood] = useState([]);
   const [expanded, setExpanded] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [foodHistory, setFoodHistory] = useState([]);
+  const flickingRef = useRef(null); 
+  const { isSignedIn, user } = useUser();
 
   const router = useRouter();
   const today = new Date().toISOString().split("T")[0];
   const plugins = [new Pagination({ type: "scroll" })];
+
+  if (isSignedIn && user) {
+    console.log("User ID:", user.id);
+    console.log("User Data:", user);
+    // You can log more user information if needed
+  }
 
   const calculatePercentage = (filled, max) => {
     if (max === 0) return 0;
@@ -82,7 +92,6 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
   //   if (status === "loading") return; // Do nothing while loading
   //   if (!session) router.push('/auth/signin'); // Redirect if not logged in
   // }, [session, status]);
-
 
   useEffect(() => {
     const savedWeekPlan = localStorage.getItem("weekPlan");
@@ -105,22 +114,19 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
         (nutritionSummary.carbohydrates_filled || 0),
     };
   };
-  useEffect(() => {
-    if (session) {
-      console.log("User Data:", session.user);
-    }
-  }, [session]);
+
   useEffect(() => {
     if (weekPlan.length > 0) {
-      getTodaysFoodAndNutrition(weekPlan, today).then(({ todaysFood, todaysNutrition }) => {
-        setTodaysFood(todaysFood);
-        setTodaysNutrition(todaysNutrition);
-        console.log("todaysFood:", todaysFood);
-        console.log("todaysNutrition:", todaysNutrition);
-      });
+      getTodaysFoodAndNutrition(weekPlan, today).then(
+        ({ todaysFood, todaysNutrition }) => {
+          setTodaysFood(todaysFood);
+          setTodaysNutrition(todaysNutrition);
+          console.log("todaysFood:", todaysFood);
+          console.log("todaysNutrition:", todaysNutrition);
+        }
+      );
     }
   }, [weekPlan, today]);
-
 
   const handleShow = () => {
     setShowModal(true);
@@ -154,7 +160,12 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
       query: { dayPlan: JSON.stringify(dayPlan) },
     });
   };
+  const addFoodHistory = (newFoodHistory) => {
+    setFoodHistory(newFoodHistory);
+    localStorage.setItem("FoodHistory", JSON.stringify(newFoodHistory));
 
+    console.log("newFoodHistory:", newFoodHistory);
+  };
   const updateNutritionData = (updatedWeekPlan) => {
     setWeekPlan(updatedWeekPlan);
     localStorage.setItem("weekPlan", JSON.stringify(updatedWeekPlan));
@@ -179,6 +190,14 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
   };
 
   useEffect(() => {
+    if (weekPlan.length > 0 && flickingRef.current) {
+      const todayPlanIndex = weekPlan.findIndex(dayPlan => dayPlan.date === today);
+      if (todayPlanIndex >= 0) {
+        flickingRef.current.moveTo(todayPlanIndex, true); // Center today's card
+      }
+    }
+  }, [weekPlan, today]);
+  useEffect(() => {
     console.log("showModal state:", showModal);
   }, [showModal]);
 
@@ -193,6 +212,8 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
         handleShow={handleShow}
         handleShow1={handleShow1}
         handleLogin={handleLogin}
+        foodHistory={foodHistory}
+        todaysNutrition={calculateNutritionNeeded(todaysNutrition)}
       />
       <div className="gridContainer1">
         {weekPlan.length === 0 && (
@@ -204,13 +225,13 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
                 питания.
               </h4>
               <div className="inputContainer">
-                <input
+                {/* <input
                   type="text"
                   value={userString}
                   onChange={(e) => setUserString(e.target.value)}
                   placeholder="Выдай мне рацион"
                   className="inputField"
-                />
+                /> */}
                 <button onClick={handleButtonClick} className="getRationButton">
                   Создать
                 </button>
@@ -219,8 +240,8 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
               <ModalComponent
                 isOpen={modalIsOpen}
                 closeModal={() => setModalIsOpen(false)}
-                userString={userString}
                 setWeekPlan={setWeekPlan}
+                userID={user ? user.id : null}
               />
             </div>
 
@@ -273,88 +294,94 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
         </div>
         <div className="gridContainer-item">
           {weekPlan.length > 0 && (
-            <Flicking circular={true} plugins={plugins}>
-              {weekPlan.map((dayPlan) => (
-                <div
-                  key={dayPlan.date}
-                  className="dayPlanCard card-panel"
-                  onClick={() => handleCardClick(dayPlan)}
-                  style={{
-                    cursor: "pointer",
-                    margin: "0 25px",
-                    border: "2px solid #28511D",
-                    borderRadius: "10px",
-                  }}
-                >
-                  <div className="cardContent" style={{ padding: "20px" }}>
-                    <h3 className="cardTitle">
-                      {dayPlan.date} - {dayPlan.day}
-                    </h3>
-                    <div className="progressLabel">Progress</div>
-                    <div className="progressBarContainer">
-                      <Nested
-                        circles={[
-                          {
-                            text: "Калории",
-                            value: calculatePercentage(
-                              dayPlan.nutritionSummary?.calories_filled || 0,
-                              dayPlan.nutritionSummary?.calories || 100
-                            ),
-                            color: "#28511D",
-                          },
-                          {
-                            text: "Белки",
-                            value: calculatePercentage(
-                              dayPlan.nutritionSummary?.protein_filled || 0,
-                              dayPlan.nutritionSummary?.protein || 100
-                            ),
-                            color: "#0ea5e9",
-                          },
-                          {
-                            text: "Жиры",
-                            value: calculatePercentage(
-                              dayPlan.nutritionSummary?.fats_filled || 0,
-                              dayPlan.nutritionSummary?.fat || 100
-                            ),
-                            color: "#c2410c",
-                          },
-                          {
-                            text: "Углеводы",
-                            value: calculatePercentage(
-                              dayPlan.nutritionSummary?.carbohydrates_filled ||
-                                0,
-                              dayPlan.nutritionSummary?.carbs || 100
-                            ),
-                            color: "#7c3aed",
-                          },
-                        ]}
-                        sx={{
-                          bgColor: "#cbd5e1",
-                          fontWeight: "bold",
-                          fontFamily: "Trebuchet MS",
-                          strokeLinecap: "round",
-                          loadingTime: 1000,
-                          valueAnimation: true,
-                          intersectionEnabled: true,
-                        }}
-                      />
-                      <div className="progressText">
-                        <strong>
-                          {calculatePercentage(
+            <Flicking
+            ref={flickingRef}
+            circular={false} // Disable circular scrolling
+            plugins={[new Arrow()]}
+            moveType="freeScroll"
+            align="center"
+            onReady={() => {
+              if (weekPlan.length > 0) {
+                const todayPlanIndex = weekPlan.findIndex(dayPlan => dayPlan.date === today);
+                if (todayPlanIndex >= 0) {
+                  flickingRef.current.moveTo(todayPlanIndex, true); // Center today's card on load
+                }
+              }
+            }}
+          >
+            {weekPlan.map((dayPlan) => (
+              <div
+                key={dayPlan.date}
+                className="dayPlanCard card-panel"
+                onClick={() => handleCardClick(dayPlan)}
+                style={{
+                  cursor: "pointer",
+                  margin: "0 25px",
+                  border: "2px solid #28511D",
+                  borderRadius: "10px",
+                }}
+              >
+                <div className="cardContent" style={{ padding: "20px" }}>
+                  <h3 className="cardTitle">
+                    {dayPlan.date} - {dayPlan.day}
+                  </h3>
+                  <div className="progressLabel">Progress</div>
+                  <div className="progressBarContainer">
+                    <Nested
+                      circles={[
+                        {
+                          text: "Калории",
+                          value: calculatePercentage(
                             dayPlan.nutritionSummary?.calories_filled || 0,
                             dayPlan.nutritionSummary?.calories || 100
-                          ).toFixed(0)}
-                          %
-                        </strong>
-                      </div>
-                    </div>
+                          ),
+                          color: "#28511D",
+                        },
+                        {
+                          text: "Белки",
+                          value: calculatePercentage(
+                            dayPlan.nutritionSummary?.protein_filled || 0,
+                            dayPlan.nutritionSummary?.protein || 100
+                          ),
+                          color: "#0ea5e9",
+                        },
+                        {
+                          text: "Жиры",
+                          value: calculatePercentage(
+                            dayPlan.nutritionSummary?.fats_filled || 0,
+                            dayPlan.nutritionSummary?.fat || 100
+                          ),
+                          color: "#c2410c",
+                        },
+                        {
+                          text: "Углеводы",
+                          value: calculatePercentage(
+                            dayPlan.nutritionSummary?.carbohydrates_filled || 0,
+                            dayPlan.nutritionSummary?.carbs || 100
+                          ),
+                          color: "#7c3aed",
+                        },
+                      ]}
+                      sx={{
+                        bgColor: "#cbd5e1",
+                        fontWeight: "bold",
+                        fontFamily: "Trebuchet MS",
+                        strokeLinecap: "round",
+                        loadingTime: 1000,
+                        valueAnimation: true,
+                        intersectionEnabled: true,
+                      }}
+                    />
                   </div>
                 </div>
-              ))}
-              <ViewportSlot>
-                <div className="flicking-pagination"></div>
-              </ViewportSlot>
-            </Flicking>
+              </div>
+            ))}
+            <ViewportSlot>
+              <div className="flicking-pagination"></div>
+              <span className="flicking-arrow-prev"></span>
+              <span className="flicking-arrow-next"></span>
+            </ViewportSlot>
+          </Flicking>
           )}
         </div>
       </div>
@@ -373,14 +400,14 @@ const [todaysNutrition, setTodaysNutrition] = useState({});
         show={showModal}
         handleClose={handleClose}
         updateNutritionData={updateNutritionData}
+        userID={user ? user.id : null}
+        addFoodHistory={addFoodHistory}
       />
-       <AddMenuModal
+      <AddMenuModal
         show1={showModal1}
         handleClose1={handleClose1}
         nutritionNeeded={calculateNutritionNeeded(todaysNutrition)}
       />
-            <LoginModal isOpen={showLoginModal} closeModal={closeLoginModal} />
-
     </div>
   );
 };

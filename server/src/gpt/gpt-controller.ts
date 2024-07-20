@@ -20,9 +20,9 @@ class GptController {
   }
 
   async getRation(req: Request, res: Response): Promise<void> {
-    const { userJson, userString } = req.body;
+    const { userJson } = req.body;
     try {
-      const weekPlan = await this.gptService.getRation(userJson, userString);
+      const weekPlan = await this.gptService.getRation(userJson);
       if (weekPlan) {
         res.json(weekPlan);
       } else {
@@ -34,43 +34,51 @@ class GptController {
   }
 
   async saveWeekPlan(req: Request, res: Response): Promise<void> {
-    const { weekPlan } = req.body;
+    const { weekPlan, userID } = req.body;
+    console.log("userID", userID);
+  
     if (!weekPlan) {
       res.status(400).send("No week plan provided");
       return;
     }
-
+  
     if (!Array.isArray(weekPlan)) {
-      res
-        .status(400)
-        .send("Invalid weekPlan structure: weekPlan is not an array.");
+      res.status(400).send("Invalid weekPlan structure: weekPlan is not an array.");
       return;
     }
-
+  
+    if (!userID) {
+      res.status(400).send("No userID provided");
+      return;
+    }
+  
+    // Prepare the document to be saved
+    const weekPlanDocument: WeekPlanDocument = {
+      weekPlan,
+      userID,
+    } as WeekPlanDocument;
+  
     try {
-      console.log(weekPlan);
-
-      const message = await this.gptService.saveWeekPlan(
-        weekPlan as unknown as WeekPlanDocument
-      );
+      // Assuming gptService.saveWeekPlan expects a WeekPlanDocument
+      const message = await this.gptService.saveWeekPlan(weekPlanDocument);
       res.status(201).send(message);
     } catch (error) {
+      console.error("Error saving week plan:", error); 
       res.status(500).send("Error saving week plan");
     }
   }
-  addMenu = async (req: Request, res: Response) => {
-    const multerReq = req as MulterRequest; // Cast req to MulterRequest to access file
-    const { file } = multerReq; // Destructure file from multerReq
-    const { nutritionScale } = req.body; // Destructure nutritionScale from req.body
   
-    // Check if nutritionScale is provided and is a valid JSON string
+  addMenu = async (req: Request, res: Response) => {
+    const multerReq = req as MulterRequest; 
+    const { file } = multerReq; 
+    const { nutritionScale } = req.body; 
+  
     if (!nutritionScale || typeof nutritionScale !== 'string') {
       res.status(400).json({ error: 'Invalid or missing nutritionScale' });
       return;
     }
   
     try {
-      // Attempt to parse nutritionScale as JSON
       const parsedNutritionScale = JSON.parse(nutritionScale);
       const result = await this.gptService.addMenu(file, parsedNutritionScale);
       console.log('Result: controller', result);
@@ -85,13 +93,14 @@ class GptController {
       const multerReq = req as MulterRequest;
       const photo = multerReq.file;
       const description = multerReq.body.description;
+      const userID = multerReq.body.userID;
 
       if (!photo) {
         res.status(400).send("No photo provided");
         return;
       }
 
-      const analysisResult = await this.gptService.addFood(photo, description);
+      const analysisResult = await this.gptService.addFood(photo, description, userID);
       res.json(analysisResult);
     } catch (error) {
       res.status(500).send("Error analyzing food");

@@ -1,23 +1,85 @@
-import React from "react";
+// components/Header.js
+import React, { useState } from "react";
 import Image from "next/image";
-import { useSession, signOut } from "next-auth/react";
-import { Menu, Transition } from "@headlessui/react";
-import { Fragment } from "react";
-import { ChevronDownIcon } from "@heroicons/react/solid";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useRouter } from "next/router";
+import Modal from "react-bootstrap/Modal";
+import Button from "react-bootstrap/Button";
 
-const Header = ({ weekPlanLength, handleShow, handleShow1, handleLogin }) => {
-  const { data: session } = useSession();
+const Header = ({
+  weekPlanLength,
+  handleShow,
+  handleShow1,
+  foodHistory,
+  todaysNutrition,
+}) => {
+  const router = useRouter();
+  const [showRecommendations, setShowRecommendations] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleSignIn = () => {
+    router.push("/sign-in");
+  };
+
+  const handleSignUp = () => {
+    router.push("/sign-up");
+  };
+
+  const handleHistoryClick = () => {
+    router.push("/history");
+  };
+
+  const handleEatInCafeClick = async () => {
+    setLoading(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/v1/recommend-food",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  latitude: latitude,
+                  longitude: longitude,
+                  nutritionScale: todaysNutrition,
+                }),
+              }
+            );
+
+            const result = await response.json();
+            console.log("Recommended food and locations:", result);
+            setRecommendations(result.recommendations || []);
+            setShowRecommendations(true);
+          } catch (error) {
+            console.error("Error fetching recommendations:", error);
+          } finally {
+            setLoading(false);
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setLoading(false);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+      setLoading(false);
+    }
+  };
 
   return (
-    <header
-      className={"header-container" + (weekPlanLength === 0 ? "" : " user")}
-    >
+    <header className={`header-container ${weekPlanLength === 0 ? "" : "user"}`}>
       <div className="header-content">
         <div className="header-title">
           <Image
-            src={
-              weekPlanLength === 0 ? "/images/logo1.png" : "/images/logo2.jpg"
-            }
+            src={weekPlanLength === 0 ? "/images/logo1.png" : "/images/logo2.jpg"}
             alt="logo"
             width={70}
             height={64}
@@ -28,93 +90,84 @@ const Header = ({ weekPlanLength, handleShow, handleShow1, handleLogin }) => {
         </div>
         <nav className="header-nav">
           <div className="header-nav1">
-            <a href="#" className="header-nav-link">
-              О нас
-            </a>
-            <a href="#" className="header-nav-link">
-              помощь
-            </a>
-            <a href="#" className="header-nav-link">
-              Контакты
-            </a>
+            <a href="#" className="header-nav-link">О нас</a>
+            <a href="#" className="header-nav-link">Помощь</a>
+            <a href="#" className="header-nav-link">Контакты</a>
           </div>
-          {session ? (
+          <SignedOut>
             <div className="header-nav2">
-              <Menu as="div" className="relative inline-block text-left">
-                <div>
-                  <Menu.Button className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
-                    <img
-                      src={session.user.image}
-                      alt="User Avatar"
-                      className="h-8 w-8 rounded-full"
-                    />
-                    <ChevronDownIcon className="-mr-1 ml-2 h-5 w-5" />
-                  </Menu.Button>
-                </div>
-
-                <Transition
-                  as={Fragment}
-                  enter="transition ease-out duration-100"
-                  enterFrom="transform opacity-0 scale-95"
-                  enterTo="transform opacity-100 scale-100"
-                  leave="transition ease-in duration-75"
-                  leaveFrom="transform opacity-100 scale-100"
-                  leaveTo="transform opacity-0 scale-95"
-                >
-                  <Menu.Items className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                    <div className="py-1">
-                      <Menu.Item>
-                        {({ active }) => (
-                          <button
-                            onClick={() => signOut()}
-                            className={`${
-                              active ? "bg-gray-100" : ""
-                            } block px-4 py-2 text-sm text-gray-700`}
-                          >
-                            Logout
-                          </button>
-                        )}
-                      </Menu.Item>
-                    </div>
-                  </Menu.Items>
-                </Transition>
-              </Menu>
+              <button
+                onClick={handleSignIn}
+                className="btn-primary"
+              >
+                Вход
+              </button>
+              <button
+                onClick={handleSignUp}
+                className="btn-primary"
+              >
+                Регистрация
+              </button>
             </div>
-          ) : (
-            weekPlanLength === 0 && (
+          </SignedOut>
+          <SignedIn>
+            {weekPlanLength > 0 && (
               <div className="header-nav2">
                 <button
-                  onClick={handleLogin}
-                  className="bg-[#28511D] text-white py-2 px-4 rounded hover:bg-[#1e3b16] transition duration-300"
+                  onClick={handleShow}
+                  className="btn-primary"
                 >
-                  Вход
+                  Добавить прием пищи
                 </button>
-                <button>
-                  <a href="/auth/signup" className="header-nav-link">
-                    Регистрация
-                  </a>
+                <button
+                  onClick={handleShow1}
+                  className="btn-primary"
+                >
+                  Добавить меню
+                </button>
+                <button
+                  onClick={handleHistoryClick}
+                  className="btn-primary"
+                >
+                  История
+                </button>
+                <button
+                  onClick={handleEatInCafeClick}
+                  className="btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? "Загрузка..." : "Поесть в кафе"}
                 </button>
               </div>
-            )
-          )}
-          {weekPlanLength > 0 && !session && (
-            <div className="header-nav2">
-              <button
-                onClick={handleShow}
-                className="bg-[#28511D] text-white py-2 px-4 rounded hover:bg-[#1e3b16] transition duration-300"
-              >
-                Добавить прием пищи
-              </button>
-              <button
-                onClick={handleShow1}
-                className="bg-[#28511D] text-white py-2 px-4 rounded hover:bg-[#1e3b16] transition duration-300"
-              >
-                Добавить меню
-              </button>
-            </div>
-          )}
+            )}
+            <UserButton />
+          </SignedIn>
         </nav>
       </div>
+      <Modal show={showRecommendations} onHide={() => setShowRecommendations(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Рекомендуемые блюда</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {recommendations.length > 0 ? (
+            <ul>
+              {recommendations.map((rec, index) => (
+                <li key={index}>
+                  <strong>{rec.dish}</strong> в {rec.restaurant}
+                  <p>{rec.reason}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>Нет доступных рекомендаций.</p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRecommendations(false)}>
+            Закрыть
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </header>
   );
 };

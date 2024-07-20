@@ -8,8 +8,8 @@ const ModalComponent = ({
   isOpen,
   closeModal,
   onSubmit,
-  userString,
   setWeekPlan,
+  userID
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [age, setAge] = useState("");
@@ -21,7 +21,7 @@ const ModalComponent = ({
   const [goals, setGoals] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  
   const handleNext = () => {
     setCurrentStep(currentStep + 1);
   };
@@ -50,7 +50,7 @@ const ModalComponent = ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userJson, userString }),
+        body: JSON.stringify({ userJson}),
       });
 
       if (!response.ok) {
@@ -63,7 +63,7 @@ const ModalComponent = ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ weekPlan: responseData }),
+        body: JSON.stringify({ weekPlan: responseData, userID: userID }),
       });
 
       if (!saveResponse.ok) {

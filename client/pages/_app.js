@@ -14,15 +14,17 @@
 
 // export default MyApp
 
-import { SessionProvider } from "next-auth/react";
-import "../styles/globals.css";
 
-function MyApp({ Component, pageProps: { session, ...pageProps } }) {
+import { ClerkProvider } from '@clerk/nextjs';
+import '../styles/globals.css';
+
+function MyApp({ Component, pageProps }) {
   return (
-    <SessionProvider session={session}>
+    <ClerkProvider>
       <Component {...pageProps} />
-    </SessionProvider>
+    </ClerkProvider>
   );
 }
 
 export default MyApp;
+

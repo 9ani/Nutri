@@ -5,7 +5,7 @@ import Form from "react-bootstrap/Form";
 import Spinner from "react-bootstrap/Spinner";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
+const AddFoodModal = ({ show, handleClose, updateNutritionData,addFoodHistory, userID }) => {
   const [photo, setPhoto] = useState(null);
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,6 +29,7 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
       const formData = new FormData();
       formData.append("photo", photo);
       formData.append("description", description);
+      formData.append("userID", userID); 
 
       const response = await fetch("http://localhost:5000/api/v1/add-food", {
         method: "POST",
@@ -41,6 +42,8 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData }) => {
 
         if (data && data.updatedWeekPlan) {
           updateNutritionData(data.updatedWeekPlan.weekPlan);
+          console.log("ALL DATATATAT HISTROY",data.allUserFoodHistory);
+          addFoodHistory(data.allUserFoodHistory);
           handleClose();
         } else {
           throw new Error("Missing week plan data in response");

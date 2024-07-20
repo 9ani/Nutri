@@ -36,7 +36,28 @@ interface DayPlan {
 
 export interface WeekPlanDocument extends Document {
   weekPlan: DayPlan[];
+  userID: string;
 }
+export interface FoodHistoryDocument extends Document {
+  name: string;
+  imageUrl: string;
+  dateEaten: Date;
+  calories: number;
+  proteins: number;
+  fats: number;
+  carbohydrates: number;
+  userID: string;
+}
+const FoodHistorySchema = new Schema({
+  name: { type: String, required: true },
+  imageUrl: { type: String, required: true },
+  dateEaten: { type: Date, required: true },
+  calories: { type: Number, required: true },
+  proteins: { type: Number, required: true },
+  fats: { type: Number, required: true },
+  carbohydrates: { type: Number, required: true },
+  userID: { type: String, required: true },
+});
 
 const mealSchema = new Schema({
   meal: { type: String, required: true },
@@ -58,9 +79,12 @@ const dayPlanSchema = new Schema({
 
 const weekPlanSchema = new Schema({
   weekPlan: { type: [dayPlanSchema], required: true },
+  userID: { type: String, required: true },
 });
 
 export const WeekPlan = mongoose.model<WeekPlanDocument>('WeekPlan', weekPlanSchema);
+export const FoodHistory = mongoose.model<FoodHistoryDocument>('FoodHistory', FoodHistorySchema);
+
 
 export interface UserJson {
   age: number;
@@ -74,3 +98,4 @@ export interface UserJson {
 export interface MulterRequest extends Request {
   file: MulterFile;
 }
+

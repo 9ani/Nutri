@@ -5,6 +5,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { WeekPlanDocument, UserJson, WeekPlan } from "./gpt-types";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import { FoodHistory, FoodHistoryDocument } from './gpt-types';
 
 dotenv.config();
 
@@ -36,12 +37,35 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const weekPlanSchema = new mongoose.Schema(
   {
-    weekPlan: Object,
+    weekPlan: {
+      type: Object,
+      required: true,
+    },
+    userID: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
 const WeekPlanModel = mongoose.model("WeekPlan", weekPlanSchema);
+
+const FoodHistorySchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    imageUrl: { type: String, required: true },
+    dateEaten: { type: Date, required: true },
+    calories: { type: Number, required: true },
+    proteins: { type: Number, required: true },
+    fats: { type: Number, required: true },
+    carbohydrates: { type: Number, required: true },
+    userID: { type: String, required: true },
+  },
+  { timestamps: true }
+);
+
+const FoodHistoryModel = mongoose.model("FoodHistory", FoodHistorySchema);
 
 interface MulterFile {
   fieldname: string;
@@ -56,24 +80,18 @@ interface MulterFile {
 }
 
 interface GptServiceInterface {
-  getRation(
-    userJson: UserJson,
-    userString: string
-  ): Promise<WeekPlanDocument | null>;
+  getRation(userJson: UserJson): Promise<WeekPlanDocument | null>;
   saveWeekPlan(weekPlan: WeekPlanDocument): Promise<WeekPlanDocument | null>;
   getWeekPlanById(id: string): Promise<WeekPlanDocument | null>;
-  addFood(photo: MulterFile | undefined, description: string): Promise<any>;
+  addFood(photo: MulterFile | undefined, description: string, userId: string): Promise<any>;
   addMenu(menuImage: MulterFile | undefined, nutritionScale: any): Promise<any>;
   getNutrition(ingredient: string): Promise<any>;
 }
 
 class GptService implements GptServiceInterface {
-  async getRation(
-    userJson: UserJson,
-    userString: string
-  ): Promise<WeekPlanDocument | null> {
+  async getRation(userJson: UserJson): Promise<WeekPlanDocument | null> {
     try {
-      const userPromptString = JSON.stringify({ ...userJson, userString });
+      const userPromptString = JSON.stringify({ ...userJson });
       const prompt = `${systemPrompt}\n${userPromptString}`;
 
       const result = await model.generateContent(prompt);
@@ -110,76 +128,89 @@ class GptService implements GptServiceInterface {
     }
   }
 
-  async saveWeekPlan(
-    weekPlan: WeekPlanDocument
-  ): Promise<WeekPlanDocument | null> {
+  async saveWeekPlan({
+    weekPlan,
+    userID,
+  }: WeekPlanDocument): Promise<WeekPlanDocument | null> {
     try {
       if (!weekPlan || !Array.isArray(weekPlan)) {
-        throw new Error("Invalid weekPlan structure: weekPlan is not an array.");
+        throw new Error(
+          "Invalid weekPlan structure: weekPlan is not an array."
+        );
       }
-  
+
       for (const dayPlan of weekPlan) {
         let calories: string | number = dayPlan.nutritionSummary.calories;
-  
-        if (typeof calories === "string" && calories.includes("-")) {
-          const [lowerCalories, upperCalories] = calories
+
+        if (
+          typeof calories === "string" &&
+          (calories as string).includes("-")
+        ) {
+          const [lowerCalories, upperCalories] = (calories as string)
             .split("-")
             .map(Number);
           const averageCalories = (lowerCalories + upperCalories) / 2;
           dayPlan.nutritionSummary.calories = averageCalories;
         }
-  
+
         // Fetch meal image URLs from Unsplash
-        await Promise.all(dayPlan.meals.map(async (meal: any) => {
-          const mealEnglishName = meal.description.match(/[a-zA-Z\s]+/g)?.join(' ').trim() || 'default';
-          console.log("mealEnglish is "+ mealEnglishName);
-          if (meal.img_url === "") {
-            try {
-              const unsplashUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
-                mealEnglishName
-              )}&per_page=1`;
-              const unsplashHeaders = {
-                Accept: "application/json",
-                Authorization: `Client-ID ${UNSPLASH_API_KEY}`, // Ensure correct authorization format
-                "User-Agent": "axios/1.7.2",
-                "Accept-Encoding": "gzip, compress, deflate, br",
-              };
-  
-              const unsplashResponse = await axios.get(unsplashUrl, {
-                headers: unsplashHeaders,
-              });
-  
-              const unsplashImageUrl =
-                unsplashResponse.data.results[0]?.urls.regular || "";
-  
-              meal.img_url = unsplashImageUrl; // Assign fetched image URL to meal object
-            } catch (error) {
-              console.error(
-                `Error fetching meal image from Unsplash for '${mealEnglishName}':`,
-                error
-              );
+        await Promise.all(
+          dayPlan.meals.map(async (meal: any) => {
+            const mealEnglishName =
+              meal.description
+                .match(/[a-zA-Z\s]+/g)
+                ?.join(" ")
+                .trim() || "default";
+            console.log("mealEnglish is " + mealEnglishName);
+            if (meal.img_url === "") {
+              try {
+                const unsplashUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
+                  mealEnglishName
+                )}&per_page=1`;
+                const unsplashHeaders = {
+                  Accept: "application/json",
+                  Authorization: `Client-ID ${UNSPLASH_API_KEY}`, // Ensure correct authorization format
+                  "User-Agent": "axios/1.7.2",
+                  "Accept-Encoding": "gzip, compress, deflate, br",
+                };
+
+                const unsplashResponse = await axios.get(unsplashUrl, {
+                  headers: unsplashHeaders,
+                });
+
+                const unsplashImageUrl =
+                  unsplashResponse.data.results[0]?.urls.regular || "";
+
+                meal.img_url = unsplashImageUrl; // Assign fetched image URL to meal object
+              } catch (error) {
+                console.error(
+                  `Error fetching meal image from Unsplash for '${mealEnglishName}':`,
+                  error
+                );
+              }
             }
-          }
-        }));
+          })
+        );
       }
-  
-      console.log("Before saving week plan");
-      weekPlan.forEach((dayPlan: any) =>
-        dayPlan.meals.forEach((meal: any) => console.log(meal))
-      );
-      const newWeekPlan = new WeekPlanModel({ weekPlan: weekPlan });
+
+      // console.log("Before saving week plan");
+      // weekPlan.forEach((dayPlan: any) =>
+      //   dayPlan.meals.forEach((meal: any) => console.log(meal))
+      // );
+
+      const newWeekPlan = new WeekPlanModel({ weekPlan, userID }); // Include userID
+      // console.log("New wEEEKKEKEKEKKE", newWeekPlan);
+      // console.log("SUERRR ID", userID);
       const savedWeekPlan = await newWeekPlan.save();
       console.log("Week plan saved to MongoDB");
-  
+
       return await this.getWeekPlanById(savedWeekPlan._id.toString());
     } catch (error) {
       console.error("Error saving week plan:", error);
       throw new Error("Error saving week plan");
     }
   }
-  
-  
-  
+
   async getWeekPlanById(id: string): Promise<WeekPlanDocument | null> {
     try {
       const weekPlan = await WeekPlanModel.findById(id);
@@ -194,11 +225,15 @@ class GptService implements GptServiceInterface {
       throw new Error("Error fetching week plan");
     }
   }
-  async  addMenu(menuImage: MulterFile | undefined, nutritionScale: any): Promise<any> {
+
+  async addMenu(
+    menuImage: MulterFile | undefined,
+    nutritionScale: any
+  ): Promise<any> {
     if (!menuImage) {
       throw new Error("No menu image uploaded.");
     }
-  
+
     try {
       const imageBase64 = fs.readFileSync(menuImage.path).toString("base64");
       console.log(nutritionScale);
@@ -208,38 +243,39 @@ class GptService implements GptServiceInterface {
         "food": "Food name",
         "quantity": "Quantity in grams"
       }`;
-  
+
       const image = {
         inlineData: {
           data: imageBase64,
           mimeType: menuImage.mimetype,
         },
       };
-      
+
       const result = await model.generateContent([prompt, image]);
       const response = await result.response;
       let text = await response.text();
       console.log("Response from analysis:", text);
-  
+
       // Sanitize the text to ensure it's valid JSON
-      text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-  
+      text = text
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
       fs.unlinkSync(menuImage.path);
       const parsedResponse = JSON.parse(text);
 
-  
       return parsedResponse;
     } catch (e: any) {
       console.error("Error in addMenu:", e.message);
       throw new Error("Failed to process menu image.");
     }
   }
-  
+
   async addFood(
-    photo: MulterFile | undefined,
-    description: string
-  ): Promise<any> {
+photo: MulterFile | undefined, description: string, userID: string  ): Promise<any> {
     try {
+      console.log(userID);
       if (!photo) {
         throw new Error("No photo provided");
       }
@@ -294,9 +330,27 @@ class GptService implements GptServiceInterface {
 
         const nutritionData = await this.getNutrition(dishName);
 
+        const foodHistory: FoodHistoryDocument = new FoodHistoryModel({
+          name: foodAnalysis.dish,
+          imageUrl: photoUrl,
+          dateEaten: new Date(),
+          calories: nutritionData.calories || 0,
+          proteins: nutritionData.totalNutrients.PROCNT?.quantity || 0,
+          fats: nutritionData.totalNutrients.FAT?.quantity || 0,
+          carbohydrates: nutritionData.totalNutrients.CHOCDF?.quantity || 0,
+          userID: userID,
+        });
+  
+        await foodHistory.save();
+        console.log("Food history saved to database");
+
+
+        const allUserFoodHistory = await FoodHistoryModel.find({ userID: userID }).sort({ dateEaten: -1 });
+        console.log("All User Food History:", allUserFoodHistory);
+
         fs.unlinkSync(photo.path);
         const updatedWeekPlan = await this.updateNutritionToWeekPlan(
-          nutritionData
+          nutritionData, userID
         );
         console.log("Updated Week Plan:", updatedWeekPlan);
 
@@ -304,6 +358,7 @@ class GptService implements GptServiceInterface {
           foodAnalysis,
           nutritionData,
           updatedWeekPlan,
+          allUserFoodHistory,
         };
       } else {
         console.error(
@@ -316,12 +371,11 @@ class GptService implements GptServiceInterface {
       throw new Error("Error analyzing food");
     }
   }
-  private async updateNutritionToWeekPlan(nutritionData: any): Promise<any> {
+  private async updateNutritionToWeekPlan(nutritionData: any, userID: string): Promise<any> {
     try {
-      // Fetch the most recent week plan
-      const recentWeekPlan = await WeekPlanModel.findOne().sort({
-        createdAt: -1,
-      });
+      console.log("updateNutritionToWeekPlan IDIDIDIDID", userID);
+      const recentWeekPlan = await WeekPlanModel.findOne({ userID: userID });
+
       console.log("Recent Week Plan:", recentWeekPlan);
 
       if (!recentWeekPlan) {

@@ -17,9 +17,11 @@
     "@google/generative-ai": "^0.14.0",
     "@huggingface/inference": "^2.7.0",
     "@types/multer": "^1.4.11",
+    "@types/puppeteer": "^7.0.4",
     "aws-sdk": "^2.1652.0",
     "axios": "^1.7.2",
     "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
@@ -29,6 +31,7 @@
     "multer": "^1.4.5-lts.1",
     "openai": "^4.51.0",
     "passport": "^0.7.0",
+    "puppeteer": "^22.13.1",
     "session": "^0.1.0"
   },
   "devDependencies": {

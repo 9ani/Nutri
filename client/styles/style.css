@@ -1,242 +1,162 @@
 @import url('https://fonts.googleapis.com/css2?family=Rubik+Mono+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Rubik+Mono+One&display=swap');
-.btn {
-  display: inline-block;
-  font-weight: 400;
-  color: #212529;
-  text-align: center;
-  vertical-align: middle;
-  user-select: none;
-  background-color: transparent;
-  border: 1px solid transparent;
-  padding: .375rem .75rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  border-radius: .25rem;
-  transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background-color: #28511D;
+}
+
+.container {
+  background-color: #28511D;
+  height: 100%;
+  min-height: 110vh;
+}
+
+.header-container {
+  background-color: white;
+  height: 80px;
+  margin-right: 50px;
+  margin-left: 50px;
+  border-radius: 50px;
+}
+
+.header-container.user {
+  background-color: #CEE422;
+}
+
+.header-container a {
+  text-decoration: none;
+  color: black;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  padding: 0 20px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-family: "Rubik Mono One", monospace;
+  font-size: 20px;
+  color: #28511D;
+}
+
+.header-title a {
+  color: #28511D;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: #28511D;
+  font-family: Inter;
+  font-size: 15.5px;
+}
+
+.header-nav1 {
+  display: flex;
+  gap: 20px;
+}
+
+.header-nav2 {
+  display: flex;
+  gap: 20px;
 }
 
 .btn-primary {
+  background-color: #28511D;
   color: #fff;
-  background-color: #007bff;
-  border-color: #007bff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-family: Inter;
+  font-size: 15.5px;
+  font-weight: 400;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .btn-primary:hover {
+  background-color: #1e3b16;
   color: #fff;
-  background-color: #0069d9;
-  border-color: #0062cc;
 }
 
-.btn-secondary {
-  color: #fff;
-  background-color: #6c757d;
-  border-color: #6c757d;
-}
+.landingImageContainer {}
 
-.btn-secondary:hover {
-  color: #fff;
-  background-color: #5a6268;
-  border-color: #545b62;
-}
-
-.btn-success {
-  color: #fff;
-  background-color: #28a745;
-  border-color: #28a745;
-}
-
-.btn-success:hover {
-  color: #fff;
-  background-color: #218838;
-  border-color: #1e7e34;
-}
-
-.form-control {
-  display: block;
-  width: 100%;
-  padding: .375rem .75rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: #495057;
-  background-color: #fff;
-  background-clip: padding-box;
-  border: 1px solid #ced4da;
-  border-radius: .25rem;
-  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-}
-
-.form-control:focus {
-  color: #495057;
-  background-color: #fff;
-  border-color: #80bdff;
-  outline: 0;
-  box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25);
-}
-  body {
-    font-family: 'Nunito', sans-serif;
-    background-color: #28511D;
-  }
-
-  
-
-  .container{
-    background-color: #28511D;
-    height: 100%;
-    min-height: 110vh;
-  }
-  .header-container{
-    background-color: white;
-    height: 80px;
-    margin-right: 50px;
-    margin-left: 50px;
-    border-radius: 50px;
-    
-  }
-  .header-container.user{
-    background-color: #CEE422;
-   
-  }
-  .header-container a{
-    text-decoration: none;
-    color: black;}
-  .header-content{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 100%;
-    padding: 0 20px;
-  }
-  .header-title{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    font-family: "Rubik Mono One", monospace;
-    font-size: 20px;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
-  }
-  .header-title a{
-    color: #28511D;
-
-  }
-  .header-nav{
-    display: flex;
-    align-items: center;
-    gap: 750px;
-    color: #28511D;
-font-family: Inter;
-font-size: 15.5px;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
-  }
-  .header-nav1{
-    display: flex;
-    gap: 20px;
-  }
-  .header-nav2{
-    display: flex;
-    gap: 20px;
-  }
-  .header-nav2 button:last-child{
-    background-color: #0F1117;
-    padding: 5%;
-    border-radius: 30px;
-    height: 60px;
-    margin-right: 15px;
-  }
-  .header-nav2 button:last-child a{color: #fff;}
-
-
-.landingImageContainer {
-  
-}
-.mainContainer{
+.mainContainer {
   background-color: #28511D;
   padding-top: 50px;
-  /* padding-left: 50px;
-  padding-right: 50px; */
 }
-.mainContainer.user{
+
+.mainContainer.user {
   background-color: #fff;
-
 }
 
-.gridContainer1{
+.gridContainer1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 100%;
 }
-.introContainer h2{
+
+.introContainer h2 {
   font-family: "Rubik Mono One", monospace;
   font-size: 80px;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
-color: #CEE422;
+  color: #CEE422;
 }
-.introContainer{
+
+.introContainer {
   display: flex;
   flex-direction: column;
   gap: 50px;
   width: 750px;
   margin-left: 150px;
 }
-.introContainer h4{
+
+.introContainer h4 {
   color: #B5D620;
-width: 70%;
-font-family: Inter;
-font-size: 22px;
-font-style: normal;
-font-weight: 700;
-line-height: normal;
+  width: 70%;
+  font-family: Inter;
+  font-size: 22px;
+  font-weight: 700;
 }
-.inputContainer{
+
+.inputContainer {
   display: flex;
   gap: 20px;
   width: 100%;
   font-family: Inter;
-font-size: 16.5px;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
-height: 60px;
-}
-.inputContainer input{
-  width: 40%;
-  padding: 10px;
-  border: 1px solid #cbd5e0;
-  border-radius: 8.75px;
-}
-.inputContainer button{
-  border-radius: 10px;
-  background: #CEE422;
-  width: 15%;
+  font-size: 16.5px;
+  height: 60px;
 }
 
-.gridContainer2{
+.inputContainer button {
+  border-radius: 10px;
+  background: #CEE422;
+  width: 50%;
+}
+
+.gridContainer2 {
   display: flex;
   padding: 0 50px;
   margin-top: 100px;
   gap: 50px;
 }
 
-.gridContainer-item{
+.gridContainer-item {
   overflow-x: auto;
   width: 50%;
 }
 
-.gridContainer-item h2{
-font-family: "Rubik Mono One", monospace;
+.gridContainer-item h2 {
+  font-family: "Rubik Mono One", monospace;
   font-size: 40px;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
-color: #28511D;
+  color: #28511D;
 }
 
 .flicking-pagination {
@@ -260,6 +180,18 @@ color: #28511D;
 .flicking-pagination-bullet-active {
   transform: scale(1.2);
 }
-.dayPlanCard .card-panel{
+
+.dayPlanCard .card-panel {
   margin-left: 50px;
+}
+
+.dayPlanCard {
+}
+
+.dayPlanCard .card-body {
+  font-family: Inter;
+}
+
+.scaleContainer {
+  font-family: Inter;
 }
