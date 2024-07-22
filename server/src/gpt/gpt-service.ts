@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { WeekPlanDocument, UserJson, WeekPlan } from "./gpt-types";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { FoodHistory, FoodHistoryDocument } from './gpt-types';
+import { FoodHistory, FoodHistoryDocument } from "./gpt-types";
 
 dotenv.config();
 
@@ -83,7 +83,11 @@ interface GptServiceInterface {
   getRation(userJson: UserJson): Promise<WeekPlanDocument | null>;
   saveWeekPlan(weekPlan: WeekPlanDocument): Promise<WeekPlanDocument | null>;
   getWeekPlanById(id: string): Promise<WeekPlanDocument | null>;
-  addFood(photo: MulterFile | undefined, description: string, userId: string): Promise<any>;
+  addFood(
+    photo: MulterFile | undefined,
+    description: string,
+    userId: string
+  ): Promise<any>;
   addMenu(menuImage: MulterFile | undefined, nutritionScale: any): Promise<any>;
   getNutrition(ingredient: string): Promise<any>;
 }
@@ -273,7 +277,10 @@ class GptService implements GptServiceInterface {
   }
 
   async addFood(
-photo: MulterFile | undefined, description: string, userID: string  ): Promise<any> {
+    photo: MulterFile | undefined,
+    description: string,
+    userID: string
+  ): Promise<any> {
     try {
       console.log(userID);
       if (!photo) {
@@ -340,17 +347,19 @@ photo: MulterFile | undefined, description: string, userID: string  ): Promise<a
           carbohydrates: nutritionData.totalNutrients.CHOCDF?.quantity || 0,
           userID: userID,
         });
-  
+
         await foodHistory.save();
         console.log("Food history saved to database");
 
-
-        const allUserFoodHistory = await FoodHistoryModel.find({ userID: userID }).sort({ dateEaten: -1 });
+        const allUserFoodHistory = await FoodHistoryModel.find({
+          userID: userID,
+        }).sort({ dateEaten: -1 });
         console.log("All User Food History:", allUserFoodHistory);
 
         fs.unlinkSync(photo.path);
         const updatedWeekPlan = await this.updateNutritionToWeekPlan(
-          nutritionData, userID
+          nutritionData,
+          userID
         );
         console.log("Updated Week Plan:", updatedWeekPlan);
 
@@ -371,10 +380,17 @@ photo: MulterFile | undefined, description: string, userID: string  ): Promise<a
       throw new Error("Error analyzing food");
     }
   }
-  private async updateNutritionToWeekPlan(nutritionData: any, userID: string): Promise<any> {
+  private async updateNutritionToWeekPlan(
+    nutritionData: any,
+    userID: string
+  ): Promise<any> {
     try {
       console.log("updateNutritionToWeekPlan IDIDIDIDID", userID);
       const recentWeekPlan = await WeekPlanModel.findOne({ userID: userID });
+
+      if (!recentWeekPlan) {
+        throw new Error(`No week plan found for user ${userID}`);
+      }
 
       console.log("Recent Week Plan:", recentWeekPlan);
 
@@ -505,7 +521,7 @@ photo: MulterFile | undefined, description: string, userID: string  ): Promise<a
 
       // Update the week plan in the database
       const updateResult = await WeekPlanModel.findOneAndUpdate(
-        { "weekPlan._id": dayPlan._id },
+        { userID: userID, "weekPlan._id": dayPlan._id },
         { $set: updateFields },
         { new: true }
       );
