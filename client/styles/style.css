@@ -347,3 +347,20 @@ body {
     right: -20px;
   }
 }
+
+.custom-slider .slick-slide {
+  padding: 0 10px;
+  transition: all 0.3s ease;
+}
+
+.custom-slider .slick-current {
+  transform: scale(1.05);
+}
+
+.custom-slider .slick-center {
+  z-index: 1;
+}
+
+.custom-slider .slick-list {
+  padding: 20px 0 !important;  /* Adds space above and below the slider */
+}

@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
 import { useClerk } from "@clerk/nextjs";
-import Hamburger from "hamburger-react"; // Import the Hamburger component
+import Hamburger from "hamburger-react";
 
 const Header = ({
   weekPlanLength,
@@ -97,10 +97,10 @@ const Header = ({
   return (
     <header
       className={`${
-        weekPlanLength === 0 ? "bg-white" :"bg-[#CEE422]"
-      } mx-4 md:mx-12 rounded-full h-auto md:h-20`}
+        weekPlanLength === 0 ? "bg-white" : "bg-[#CEE422]"
+      } mx-4 md:mx-12 rounded-full h-auto md:h-20 relative`}
     >
-      <div className="flex flex-col md:flex-row justify-between items-center h-full px-4 md:px-6 py-2 md:py-0">
+      <div className="flex justify-between items-center h-full px-4 md:px-6 py-2 md:py-0">
         <div className="flex items-center gap-4">
           <Image
             src={
@@ -110,77 +110,178 @@ const Header = ({
             width={70}
             height={64}
           />
-          <a href="/" className="text-green-800 font-bold text-2xl no-underline">
+          <a
+            href="/"
+            className="text-green-800 font-bold text-2xl no-underline"
+          >
             NUTRIWEEK
           </a>
         </div>
-        <div className="md:hidden flex items-center">
-          <Hamburger toggled={isMenuOpen} toggle={setIsMenuOpen} />
-        </div>
-        <nav className={`md:flex items-center gap-6 ${isMenuOpen ? 'block' : 'hidden'} md:block`}>
-          {weekPlanLength === 0 && (
-            <div className="flex flex-col md:flex-row gap-6">
-              <a href="#" className="text-green-800">
-                О нас
-              </a>
-              <a href="#" className="text-green-800">
-                Помощь
-              </a>
-              <a href="#" className="text-green-800">
-                Контакты
-              </a>
-            </div>
-          )}
-          <SignedOut>
-            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-              <button
-                onClick={handleSignIn}
-                className="bg-green-800 text-white px-4 py-2 rounded"
-              >
-                Вход
-              </button>
-              <button
-                onClick={handleSignUp}
-                className="bg-green-800 text-white px-4 py-2 rounded"
-              >
-                Регистрация
-              </button>
-            </div>
-          </SignedOut>
+
+        {/* Desktop Menu */}
+        <nav className="hidden md:flex items-center gap-6">
           <SignedIn>
             {weekPlanLength > 0 && (
-              <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+              <>
                 <button
                   onClick={handleShow}
-                  className="bg-green-800 text-white px-4 py-2 rounded"
+                  className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
                 >
                   Добавить прием пищи
                 </button>
                 <button
                   onClick={handleShow1}
-                  className="bg-green-800 text-white px-4 py-2 rounded"
+                  className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
                 >
                   Добавить меню
                 </button>
                 <button
                   onClick={handleHistoryClick}
-                  className="bg-green-800 text-white px-4 py-2 rounded"
+                  className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
                 >
                   История
                 </button>
                 <button
                   onClick={handleEatInCafeClick}
-                  className="bg-green-800 text-white px-4 py-2 rounded"
+                  className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
+                  disabled={loading}
+                >
+                  {loading ? "Загрузка..." : "Поесть в кафе"}
+                </button>
+              </>
+            )}
+            <UserButton signOutCallback={handleSignOut} />
+          </SignedIn>
+          <SignedOut>
+            <a
+              href="#"
+              className="text-green-800 no-underline hover:text-green-600 transition-colors duration-200"
+            >
+              О нас
+            </a>
+            <a
+              href="#"
+              className="text-green-800 no-underline hover:text-green-600 transition-colors duration-200"
+            >
+              Помощь
+            </a>
+            <a
+              href="#"
+              className="text-green-800 no-underline hover:text-green-600 transition-colors duration-200"
+            >
+              Контакты
+            </a>
+            <button
+              onClick={handleSignIn}
+              className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
+            >
+              Вход
+            </button>
+            <button
+              onClick={handleSignUp}
+              className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
+            >
+              Регистрация
+            </button>
+          </SignedOut>
+        </nav>
+
+        {/* Mobile Burger Menu */}
+        <div className="md:hidden flex items-center">
+          <Hamburger
+            toggled={isMenuOpen}
+            toggle={setIsMenuOpen}
+            color="#2F855A"
+            size={24}
+            rounded
+          />
+        </div>
+      </div>
+
+      {/* Mobile Menu Content */}
+      <div
+        className={`md:hidden fixed top-0 right-0 h-full w-64 bg-white shadow-lg transform ${
+          isMenuOpen ? "translate-x-0" : "translate-x-full"
+        } transition-transform duration-300 ease-in-out z-50 overflow-y-auto`}
+      >
+        <div className="p-4">
+          <SignedIn>
+            <UserButton signOutCallback={handleSignOut} />
+            {weekPlanLength > 0 && (
+              <div className="flex flex-col gap-4 mt-4">
+                <button
+                  onClick={handleShow}
+                  className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
+                >
+                  Добавить прием пищи
+                </button>
+                <button
+                  onClick={handleShow1}
+                  className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
+                >
+                  Добавить меню
+                </button>
+                <button
+                  onClick={handleHistoryClick}
+                  className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
+                >
+                  История
+                </button>
+                <button
+                  onClick={handleEatInCafeClick}
+                  className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
                   disabled={loading}
                 >
                   {loading ? "Загрузка..." : "Поесть в кафе"}
                 </button>
               </div>
             )}
-            <UserButton signOutCallback={handleSignOut} />
           </SignedIn>
-        </nav>
+          <SignedOut>
+            <div className="flex flex-col gap-4 mt-4">
+              <a
+                href="#"
+                className="text-green-800 no-underline hover:text-green-600 transition-colors duration-200"
+              >
+                О нас
+              </a>
+              <a
+                href="#"
+                className="text-green-800 no-underline hover:text-green-600 transition-colors duration-200"
+              >
+                Помощь
+              </a>
+              <a
+                href="#"
+                className="text-green-800 no-underline hover:text-green-600 transition-colors duration-200"
+              >
+                Контакты
+              </a>
+              <button
+                onClick={handleSignIn}
+                className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
+              >
+                Вход
+              </button>
+              <button
+                onClick={handleSignUp}
+                className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors duration-200"
+              >
+                Регистрация
+              </button>
+            </div>
+          </SignedOut>
+        </div>
       </div>
+
+      {/* Overlay to close menu when clicking outside */}
+      {isMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setIsMenuOpen(false)}
+        ></div>
+      )}
+
       <Modal
         show={showRecommendations}
         onHide={() => setShowRecommendations(false)}

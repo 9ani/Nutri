@@ -127,9 +127,10 @@ const IndexPage = () => {
     dots: false,
     infinite: false,
     speed: 500,
-    slidesToShow: 3,
+    slidesToShow: 2,  // Changed from 3 to 2
     slidesToScroll: 1,
-    centerMode: false,
+    centerMode: true,  // Enable center mode
+    centerPadding: '60px',  // Adjust as needed
     focusOnSelect: true,
     autoplay: false,
     arrows: true,
@@ -148,6 +149,7 @@ const IndexPage = () => {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          centerPadding: '40px',  // Adjust for smaller screens
         },
       },
       {
@@ -155,6 +157,7 @@ const IndexPage = () => {
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
+          centerPadding: '20px',  // Adjust for mobile screens
         },
       },
     ],
@@ -318,7 +321,6 @@ const IndexPage = () => {
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
   };
-  
 
   useEffect(() => {
     if (weekPlan.length > 0 && flickingRef.current) {
@@ -352,21 +354,21 @@ const IndexPage = () => {
         foodHistory={foodHistory}
         todaysNutrition={calculateNutritionNeeded(todaysNutrition)}
       />
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row items-center justify-between">
         {weekPlan.length === 0 && (
           <>
-            <div className="ml-16 w-3/4">
-              <h2 className="text-6xl font-bold text-[#CEE422] mb-8">
+            <div className="w-full lg:w-3/4 mb-8 lg:mb-0 lg:ml-16">
+              <h2 className="text-4xl lg:text-6xl font-bold text-[#CEE422] mb-4 lg:mb-8 lg:w-2/3">
                 Cоставление рациона питания
               </h2>
-              <h4 className="text-xl font-bold text-[#CEE422] w-2/3 mb-8">
+              <h4 className="text-lg lg:text-xl font-bold text-[#CEE422] w-full lg:w-2/3 mb-4 lg:mb-8">
                 Введите свои диетические предпочтения, чтобы составить план
                 питания.
               </h4>
-              <div className="flex gap-4 w-full h-16">
+              <div className="flex gap-4 w-full lg:w-2/3 h-12 lg:h-16">
                 <button
                   onClick={handleButtonClick}
-                  className="w-1/2 bg-[#CEE422] rounded-lg text-lg"
+                  className="w-full bg-[#CEE422] rounded-lg text-base lg:text-lg"
                 >
                   Создать
                 </button>
@@ -378,13 +380,13 @@ const IndexPage = () => {
                 userID={user ? user.id : null}
               />
             </div>
-            <div className="w-1/2">
+            <div className="w-full lg:w-1/2 mt-8 lg:mt-0">
               <Image
                 src="/images/landing1.png"
                 alt="landing"
                 width={650}
                 height={725}
-                className="object-cover"
+                className="object-cover w-full h-auto"
               />
             </div>
           </>
@@ -407,11 +409,12 @@ const IndexPage = () => {
               </div>
             </div>
           )}
-          <h2 className="text-4xl font-bold text-green-800 mb-4">
+          
+          {weekPlan && weekPlan.length > 0 ? (
+            <div>
+              <h2 className="text-4xl font-bold text-green-800 mb-4">
             Рекомендованные блюда:
           </h2>
-          {todaysFood && todaysFood.length > 0 ? (
-            <div>
               {todaysFood.map((food, index) => (
                 <Accordion
                   key={index}
@@ -494,9 +497,11 @@ const IndexPage = () => {
               </div>
             </div>
           )}
-          <div className="mt-8">
-    <FoodHistoryPreview foodHistory={foodHistory} />
-  </div>
+          {weekPlan.length > 0 && (
+            <div className="mt-8">
+              <FoodHistoryPreview foodHistory={foodHistory} />
+            </div>
+          )}
         </div>
       </div>
 
