@@ -159,39 +159,160 @@ body {
   color: #28511D;
 }
 
-.flicking-pagination {
-  position: absolute;
-  bottom: 10px;
+.carousel-container {
   width: 100%;
-  text-align: center;
+  margin: 0 auto;
+  position: relative;
+  padding: 0 40px;
 }
 
-.flicking-pagination-bullet {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  margin: 0 5px;
-  background-color: #28511D;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.3s;
-}
-
-.flicking-pagination-bullet-active {
-  transform: scale(1.2);
-}
-
-.dayPlanCard .card-panel {
-  margin-left: 50px;
+.slick-slide {
+  padding: 0 10px;
 }
 
 .dayPlanCard {
+  cursor: pointer;
+  border: 2px solid #28511D;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 500px;  /* Increased height */
+  width: 90%;  /* Set width to 90% of the container */
+  margin: 0 auto;  /* Center the card */
+  transition: all 0.3s ease;
 }
 
-.dayPlanCard .card-body {
-  font-family: Inter;
+.slick-current .dayPlanCard {
+  transform: scale(1.05);  /* Slightly enlarge the current card */
 }
 
-.scaleContainer {
-  font-family: Inter;
+.cardContent {
+  padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cardTitle {
+  font-size: 20px;  /* Increase font size */
+  margin-bottom: 15px;
+}
+
+.progressLabel {
+  font-size: 1.2em;  /* Increase font size */
+  margin-bottom: 10px;
+}
+
+.progressBarContainer {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Adjust the Nested component size */
+.progressBarContainer > div {
+  width: 90% !important;
+  height: 90% !important;
+}
+
+.slick-prev,
+.slick-next {
+  font-size: 0;
+  line-height: 0;
+  position: absolute;
+  top: 50%;
+  display: block;
+  width: 40px;  /* Increased size */
+  height: 40px;  /* Increased size */
+  padding: 0;
+  transform: translate(0, -50%);
+  cursor: pointer;
+  color: transparent;
+  border: none;
+  outline: none;
+  background: #28511D;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.slick-prev:hover,
+.slick-next:hover {
+  background: #1e3a14;
+}
+
+.slick-prev:before,
+.slick-next:before {
+  font-size: 30px;  /* Increased size */
+  line-height: 1;
+  opacity: .75;
+  color: white;
+}
+
+.slick-prev {
+  left: 10px;
+}
+
+.slick-next {
+  right: 10px;
+}
+
+.custom-slider .slick-prev,
+.custom-slider .slick-next {
+  width: 40px;  /* Increased size */
+  height: 40px;  /* Increased size */
+}
+
+.custom-slider .slick-prev:before,
+.custom-slider .slick-next:before {
+  font-size: 40px;  /* Increased size */
+}
+.nutritionProgressContainer {
+  margin-bottom: 30px;
+}
+
+.nutritionProgressContainer h3 {
+  font-family: "Rubik Mono One", monospace;
+  font-size: 24px;
+  color: #28511D;
+  margin-bottom: 15px;
+}
+
+.nutritionProgressContainer > div {
+  width: 300px !important;
+  height: 300px !important;
+  margin: 0 auto;
+}.nutrition-details {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+}
+
+.nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.nutrition-item {
+  background-color: white;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.dayPlanCard {
+  padding: 20px;
+  height: auto;
+  min-height: 400px;
+}
+
+.meal-summary {
+  margin-bottom: 20px;
+}
+
+.nutrition-summary {
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 5px;
 }

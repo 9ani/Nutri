@@ -39,6 +39,7 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData,addFoodHistory, u
       if (response.ok) {
         console.log("Food added successfully!");
         const data = await response.json();
+        console.log("Added food",data);
 
         if (data && data.updatedWeekPlan) {
           updateNutritionData(data.updatedWeekPlan.weekPlan);
@@ -66,37 +67,47 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData,addFoodHistory, u
       centered
       size="lg"
     >
-      <Modal.Header closeButton style={{ backgroundColor: "#29b260", color: "white" }}>
+      <Modal.Header closeButton className="bg-green-500 text-white">
         <Modal.Title>Add Food</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className="p-6">
         {loading ? (
           <div className="text-center">
             <Spinner animation="border" role="status">
-              <span className="visually-hidden">Loading...</span>
+              <span className="sr-only">Loading...</span>
             </Spinner>
             <p className="mt-2">Adding food...</p>
           </div>
         ) : (
-          <Form onSubmit={handleSubmit}>
-            <Form.Group controlId="formPhoto" className="mb-3">
-              <Form.Label>Photo</Form.Label>
-              <Form.Control type="file" onChange={handlePhotoChange} accept="image/*" />
+          <Form onSubmit={handleSubmit} className="space-y-4">
+            <Form.Group controlId="formPhoto">
+              <Form.Label className="font-semibold">Photo</Form.Label>
+              <Form.Control 
+                type="file" 
+                onChange={handlePhotoChange} 
+                accept="image/*"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+              />
             </Form.Group>
 
-            <Form.Group controlId="formDescription" className="mb-3">
-              <Form.Label>Description</Form.Label>
+            <Form.Group controlId="formDescription">
+              <Form.Label className="font-semibold">Description</Form.Label>
               <Form.Control
                 type="text"
                 value={description}
                 onChange={handleDescriptionChange}
                 placeholder="Enter food description"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
               />
             </Form.Group>
 
-            {error && <p className="text-danger mb-3">{error}</p>}
+            {error && <p className="text-red-500">{error}</p>}
 
-            <Button variant="primary" type="submit" style={{ backgroundColor: "#29b260", border: "none" }}>
+            <Button 
+              variant="primary" 
+              type="submit" 
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
               Submit
             </Button>
           </Form>

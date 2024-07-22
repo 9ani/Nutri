@@ -1,7 +1,8 @@
-import React, { useEffect, useRef,useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { useUser } from "@clerk/nextjs";
-
+import NutritionProgress from "../components/NutritionProgress";
+import NutritionDetails from "../components/NutritionDetails";
 import { useSession } from "next-auth/react";
 import {
   CircularProgressbarWithChildren,
@@ -12,7 +13,10 @@ import Button from "react-bootstrap/Button";
 import AddFoodModal from "../components/AddFoodModal";
 import AddMenuModal from "../components/AddMenuModal";
 import ModalComponent from "../components/Modal";
-
+import FoodHistoryPreview from "../components/FoodHistoryPreview";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 import Header from "../components/Header";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Image from "next/image";
@@ -23,11 +27,10 @@ import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { styled } from "@mui/material/styles";
 import Flicking, { ViewportSlot } from "@egjs/react-flicking";
-import {Pagination} from "@egjs/flicking-plugins";
+import { Pagination } from "@egjs/flicking-plugins";
 import { Arrow } from "@egjs/flicking-plugins";
 import "@egjs/flicking/dist/flicking.css";
 import "@egjs/flicking-plugins/dist/arrow.css";
-import { Flat, Heat, Nested } from "@alptugidin/react-circular-progress-bar";
 
 const Accordion = styled(MuiAccordion)(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
@@ -70,18 +73,88 @@ const IndexPage = () => {
   const [expanded, setExpanded] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [foodHistory, setFoodHistory] = useState([]);
-  const flickingRef = useRef(null); 
+  const flickingRef = useRef(null);
   const { isSignedIn, user } = useUser();
-
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const sliderRef = useRef(null);
   const router = useRouter();
   const today = new Date().toISOString().split("T")[0];
   const plugins = [new Pagination({ type: "scroll" })];
+  const [isLoading, setIsLoading] = useState(true);
 
   if (isSignedIn && user) {
     console.log("User ID:", user.id);
     console.log("User Data:", user);
     // You can log more user information if needed
   }
+
+  useEffect(() => {
+    if (weekPlan.length > 0) {
+      const todayIndex = weekPlan.findIndex(
+        (dayPlan) => dayPlan.date === today
+      );
+      if (todayIndex >= 0) {
+        setCurrentDayIndex(todayIndex);
+        if (sliderRef.current) {
+          sliderRef.current.slickGoTo(todayIndex);
+        }
+      }
+    }
+  }, [weekPlan, today]);
+  const SamplePrevArrow = (props) => {
+    const { className, style, onClick } = props;
+    return (
+      <div
+        className="slick-arrow slick-prev bg-green-800 text-white rounded-full w-10 h-10 flex items-center justify-center absolute left-0 z-10 transform -translate-y-1/2"
+        style={{ ...style, display: "block", background: "#28511D" }}
+        onClick={onClick}
+      />
+    );
+  };
+
+  const SampleNextArrow = (props) => {
+    const { className, style, onClick } = props;
+    return (
+      <div
+        className="slick-arrow slick-next bg-green-800 text-white rounded-full w-10 h-10 flex items-center justify-center absolute right-0 z-10 transform -translate-y-1/2"
+        style={{ ...style, display: "block", background: "#28511D" }}
+        onClick={onClick}
+      />
+    );
+  };
+  const settings = {
+    dots: false,
+    infinite: false,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    centerMode: true,
+    centerPadding: "200px",
+    focusOnSelect: true,
+    autoplay: false,
+    arrows: true,
+    initialSlide: currentDayIndex,
+    afterChange: (index) => {
+      setCurrentDayIndex(index);
+      const selectedDay = weekPlan[index];
+      setTodaysFood(selectedDay.meals);
+      setTodaysNutrition(selectedDay.nutritionSummary);
+    },
+    prevArrow: <SamplePrevArrow />,
+    nextArrow: <SampleNextArrow />,
+  };
+
+  useEffect(() => {
+    if (isSignedIn && user) {
+      fetchUserData(user.id);
+    } else {
+      // Clear local storage when user is not signed in
+      localStorage.removeItem("weekPlan");
+      localStorage.removeItem("foodHistory");
+      setWeekPlan([]);
+      setFoodHistory([]);
+    }
+  }, [isSignedIn, user]);
 
   const calculatePercentage = (filled, max) => {
     if (max === 0) return 0;
@@ -117,6 +190,8 @@ const IndexPage = () => {
 
   useEffect(() => {
     if (weekPlan.length > 0) {
+      setIsLoading(false);
+
       getTodaysFoodAndNutrition(weekPlan, today).then(
         ({ todaysFood, todaysNutrition }) => {
           setTodaysFood(todaysFood);
@@ -125,6 +200,19 @@ const IndexPage = () => {
           console.log("todaysNutrition:", todaysNutrition);
         }
       );
+    }
+  }, [weekPlan, today]);
+  useEffect(() => {
+    if (weekPlan.length > 0) {
+      const todayIndex = weekPlan.findIndex(
+        (dayPlan) => dayPlan.date === today
+      );
+      if (todayIndex >= 0) {
+        setCurrentDayIndex(todayIndex);
+        if (sliderRef.current) {
+          sliderRef.current.slickGoTo(todayIndex);
+        }
+      }
     }
   }, [weekPlan, today]);
 
@@ -151,6 +239,32 @@ const IndexPage = () => {
     setModalIsOpen(true);
   };
 
+  const fetchUserData = async (userId) => {
+    try {
+      // Fetch Week Plan
+      const weekPlanResponse = await fetch(`/api/weekPlan?userId=${userId}`);
+      const weekPlanData = await weekPlanResponse.json();
+      if (weekPlanData.weekPlan) {
+        setWeekPlan(weekPlanData.weekPlan);
+        localStorage.setItem("weekPlan", JSON.stringify(weekPlanData.weekPlan));
+      }
+
+      // Fetch Food History
+      const foodHistoryResponse = await fetch(
+        `/api/foodHistory?userId=${userId}`
+      );
+      const foodHistoryData = await foodHistoryResponse.json();
+      if (foodHistoryData.foodHistory) {
+        setFoodHistory(foodHistoryData.foodHistory);
+        localStorage.setItem(
+          "foodHistory",
+          JSON.stringify(foodHistoryData.foodHistory)
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
   const handleCardClick = (dayPlan) => {
     console.log(dayPlan.nutritionSummary?.calories_filled);
     console.log(dayPlan.nutritionSummary?.protein_filled);
@@ -188,10 +302,15 @@ const IndexPage = () => {
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
   };
+  function formatNumber(value, decimals = 0) {
+    return value.toFixed(decimals);
+  }
 
   useEffect(() => {
     if (weekPlan.length > 0 && flickingRef.current) {
-      const todayPlanIndex = weekPlan.findIndex(dayPlan => dayPlan.date === today);
+      const todayPlanIndex = weekPlan.findIndex(
+        (dayPlan) => dayPlan.date === today
+      );
       if (todayPlanIndex >= 0) {
         flickingRef.current.moveTo(todayPlanIndex, true); // Center today's card
       }
@@ -206,7 +325,11 @@ const IndexPage = () => {
   }, [weekPlan]);
 
   return (
-    <div className={"mainContainer" + (weekPlan.length === 0 ? "" : " user")}>
+    <div
+      className={`bg-green-800 ${
+        weekPlan.length === 0 ? "" : "bg-white"
+      } pt-12`}
+    >
       <Header
         weekPlanLength={weekPlan.length}
         handleShow={handleShow}
@@ -215,28 +338,25 @@ const IndexPage = () => {
         foodHistory={foodHistory}
         todaysNutrition={calculateNutritionNeeded(todaysNutrition)}
       />
-      <div className="gridContainer1">
+      <div className="flex items-center justify-between">
         {weekPlan.length === 0 && (
           <>
-            <div className="introContainer">
-              <h2 className="title">Cоставление рациона питания</h2>
-              <h4 className="description">
+            <div className="ml-16 w-3/4">
+              <h2 className="text-6xl font-bold text-[#CEE422] mb-8">
+                Cоставление рациона питания
+              </h2>
+              <h4 className="text-xl font-bold text-[#CEE422] w-2/3 mb-8">
                 Введите свои диетические предпочтения, чтобы составить план
                 питания.
               </h4>
-              <div className="inputContainer">
-                {/* <input
-                  type="text"
-                  value={userString}
-                  onChange={(e) => setUserString(e.target.value)}
-                  placeholder="Выдай мне рацион"
-                  className="inputField"
-                /> */}
-                <button onClick={handleButtonClick} className="getRationButton">
+              <div className="flex gap-4 w-full h-16">
+                <button
+                  onClick={handleButtonClick}
+                  className="w-1/2 bg-[#CEE422] rounded-lg text-lg"
+                >
                   Создать
                 </button>
               </div>
-
               <ModalComponent
                 isOpen={modalIsOpen}
                 closeModal={() => setModalIsOpen(false)}
@@ -244,23 +364,38 @@ const IndexPage = () => {
                 userID={user ? user.id : null}
               />
             </div>
-
-            <div className="landingImageContainer">
+            <div className="w-1/2">
               <Image
                 src="/images/landing1.png"
                 alt="landing"
-                objectFit="cover"
-                className="landingImage"
                 width={650}
                 height={725}
+                className="object-cover"
               />
             </div>
           </>
         )}
       </div>
-      <div className="gridContainer2">
-        <div className="gridContainer-item">
-          <h2>Рекомендованные блюда:</h2>
+      <div className="flex flex-col md:flex-row gap-4 md:gap-12 px-4 md:px-12 mt-8 md:mt-24">
+        <div className="w-full md:w-1/2">
+          {weekPlan.length > 0 && weekPlan[currentDayIndex] && (
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="w-full md:w-1/2">
+                <NutritionProgress
+                  nutritionSummary={weekPlan[currentDayIndex].nutritionSummary}
+                  date={weekPlan[currentDayIndex].date}
+                />
+              </div>
+              <div className="w-full md:w-1/2">
+                <NutritionDetails
+                  nutritionSummary={weekPlan[currentDayIndex].nutritionSummary}
+                />
+              </div>
+            </div>
+          )}
+          <h2 className="text-4xl font-bold text-green-800 mb-4">
+            Рекомендованные блюда:
+          </h2>
           {todaysFood && todaysFood.length > 0 ? (
             <div>
               {todaysFood.map((food, index) => (
@@ -281,7 +416,7 @@ const IndexPage = () => {
                       <img
                         src={food.img_url}
                         alt={food.meal}
-                        style={{ maxWidth: "100%", marginTop: "10px" }}
+                        className="w-full mt-2"
                       />
                     )}
                   </AccordionDetails>
@@ -289,113 +424,100 @@ const IndexPage = () => {
               ))}
             </div>
           ) : (
-            <p>No food items available for today.</p>
+            <p></p>
           )}
         </div>
-        <div className="gridContainer-item">
+        <div className="w-full md:w-1/2">
+
           {weekPlan.length > 0 && (
-            <Flicking
-            ref={flickingRef}
-            circular={false} // Disable circular scrolling
-            plugins={[new Arrow()]}
-            moveType="freeScroll"
-            align="center"
-            onReady={() => {
-              if (weekPlan.length > 0) {
-                const todayPlanIndex = weekPlan.findIndex(dayPlan => dayPlan.date === today);
-                if (todayPlanIndex >= 0) {
-                  flickingRef.current.moveTo(todayPlanIndex, true); // Center today's card on load
-                }
-              }
-            }}
-          >
-            {weekPlan.map((dayPlan) => (
-              <div
-                key={dayPlan.date}
-                className="dayPlanCard card-panel"
-                onClick={() => handleCardClick(dayPlan)}
-                style={{
-                  cursor: "pointer",
-                  margin: "0 25px",
-                  border: "2px solid #28511D",
-                  borderRadius: "10px",
-                }}
-              >
-                <div className="cardContent" style={{ padding: "20px" }}>
-                  <h3 className="cardTitle">
-                    {dayPlan.date} - {dayPlan.day}
-                  </h3>
-                  <div className="progressLabel">Progress</div>
-                  <div className="progressBarContainer">
-                    <Nested
-                      circles={[
-                        {
-                          text: "Калории",
-                          value: calculatePercentage(
-                            dayPlan.nutritionSummary?.calories_filled || 0,
-                            dayPlan.nutritionSummary?.calories || 100
-                          ),
-                          color: "#28511D",
-                        },
-                        {
-                          text: "Белки",
-                          value: calculatePercentage(
-                            dayPlan.nutritionSummary?.protein_filled || 0,
-                            dayPlan.nutritionSummary?.protein || 100
-                          ),
-                          color: "#0ea5e9",
-                        },
-                        {
-                          text: "Жиры",
-                          value: calculatePercentage(
-                            dayPlan.nutritionSummary?.fats_filled || 0,
-                            dayPlan.nutritionSummary?.fat || 100
-                          ),
-                          color: "#c2410c",
-                        },
-                        {
-                          text: "Углеводы",
-                          value: calculatePercentage(
-                            dayPlan.nutritionSummary?.carbohydrates_filled || 0,
-                            dayPlan.nutritionSummary?.carbs || 100
-                          ),
-                          color: "#7c3aed",
-                        },
-                      ]}
-                      sx={{
-                        bgColor: "#cbd5e1",
-                        fontWeight: "bold",
-                        fontFamily: "Trebuchet MS",
-                        strokeLinecap: "round",
-                        loadingTime: 1000,
-                        valueAnimation: true,
-                        intersectionEnabled: true,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-            <ViewportSlot>
-              <div className="flicking-pagination"></div>
-              <span className="flicking-arrow-prev"></span>
-              <span className="flicking-arrow-next"></span>
-            </ViewportSlot>
-          </Flicking>
+            <div className="relative px-2 md:px-10">
+              {isLoading ? (
+                <div>Loading...</div>
+              ) : (
+                <Slider ref={sliderRef} {...settings} className="custom-slider">
+                  {weekPlan.map((dayPlan, index) => (
+                    <div
+                      key={dayPlan.date}
+                      className="border-2 border-green-800 rounded-lg overflow-hidden w-full md:w-11/12 mx-auto cursor-pointer transition-all duration-300 hover:scale-105"
+                      onClick={() => handleCardClick(dayPlan)}
+                    >
+                      <div className="p-4 h-full flex flex-col min-h-[400px] md:h-[400px]">
+                        <h3 className="text-xl font-bold mb-2">
+                          {dayPlan.date} - {dayPlan.day}
+                        </h3>
+                        <div className="flex-grow overflow-auto mb-4">
+                          {dayPlan.meals.map((meal, mealIndex) => (
+                            <p key={mealIndex} className="mb-1">
+                              <strong>{meal.meal}:</strong> {meal.description}
+                            </p>
+                          ))}
+                        </div>
+                        <div className="mt-auto">
+                          <h4 className="font-bold mb-2">Питание</h4>
+                          <p>
+                            Калории:{" "}
+                            {formatNumber(
+                              Math.round(
+                                dayPlan.nutritionSummary.calories_filled
+                              )
+                            )}{" "}
+                            /{" "}
+                            {formatNumber(
+                              Math.round(dayPlan.nutritionSummary.calories)
+                            )}
+                          </p>
+                          <p>
+                            Белки:{" "}
+                            {formatNumber(
+                              Math.round(
+                                dayPlan.nutritionSummary.protein_filled
+                              )
+                            )}
+                            g /{" "}
+                            {formatNumber(
+                              Math.round(dayPlan.nutritionSummary.protein)
+                            )}
+                            g
+                          </p>
+                          <p>
+                            Жиры:{" "}
+                            {formatNumber(
+                              Math.round(dayPlan.nutritionSummary.fats_filled)
+                            )}
+                            g /{" "}
+                            {formatNumber(
+                              Math.round(dayPlan.nutritionSummary.fats)
+                            )}
+                            g
+                          </p>
+                          <p>
+                            Углеводы:{" "}
+                            {formatNumber(
+                              Math.round(
+                                dayPlan.nutritionSummary.carbohydrates_filled
+                              )
+                            )}
+                            g /{" "}
+                            {formatNumber(
+                              Math.round(dayPlan.nutritionSummary.carbohydrates)
+                            )}
+                            g
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </Slider>
+              )}
+                      <FoodHistoryPreview foodHistory={foodHistory} />
+
+            </div>
+            
           )}
+          
         </div>
       </div>
-      {/* {weekPlan.length > 0 && (
-        <div className="addButtonContainer">
-          <Button
-            variant="primary"
-            onClick={handleShow}
-            style={{ backgroundColor: "#28511D" }}
-          >
-            Добавить прием пищи
-          </Button>
-        </div>
-      )} */}
+      
       <AddFoodModal
         show={showModal}
         handleClose={handleClose}

@@ -1,10 +1,11 @@
-// components/Header.js
 import React, { useState } from "react";
 import Image from "next/image";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useRouter } from "next/router";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
+import { useClerk } from "@clerk/nextjs";
+import Hamburger from "hamburger-react"; // Import the Hamburger component
 
 const Header = ({
   weekPlanLength,
@@ -17,6 +18,8 @@ const Header = ({
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { signOut } = useClerk();
 
   const handleSignIn = () => {
     router.push("/sign-in");
@@ -28,6 +31,17 @@ const Header = ({
 
   const handleHistoryClick = () => {
     router.push("/history");
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      localStorage.clear();
+      console.log("Local storage cleared");
+      window.location.href = "/"; // Force a full page reload
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
   };
 
   const handleEatInCafeClick = async () => {
@@ -55,8 +69,14 @@ const Header = ({
 
             const result = await response.json();
             console.log("Recommended food and locations:", result);
-            setRecommendations(result.recommendations || []);
-            setShowRecommendations(true);
+
+            if (result.recommendations && result.recommendations.length > 0) {
+              setRecommendations(result.recommendations);
+              setShowRecommendations(true);
+            } else {
+              setRecommendations([]);
+              setShowRecommendations(false);
+            }
           } catch (error) {
             console.error("Error fetching recommendations:", error);
           } finally {
@@ -75,36 +95,53 @@ const Header = ({
   };
 
   return (
-    <header className={`header-container ${weekPlanLength === 0 ? "" : "user"}`}>
-      <div className="header-content">
-        <div className="header-title">
+    <header
+      className={`${
+        weekPlanLength === 0 ? "bg-white" :"bg-[#CEE422]"
+      } mx-4 md:mx-12 rounded-full h-auto md:h-20`}
+    >
+      <div className="flex flex-col md:flex-row justify-between items-center h-full px-4 md:px-6 py-2 md:py-0">
+        <div className="flex items-center gap-4">
           <Image
-            src={weekPlanLength === 0 ? "/images/logo1.png" : "/images/logo2.jpg"}
+            src={
+              weekPlanLength === 0 ? "/images/logo1.png" : "/images/logo2.jpg"
+            }
             alt="logo"
             width={70}
             height={64}
           />
-          <a href="/" className="header-link">
+          <a href="/" className="text-green-800 font-bold text-2xl no-underline">
             NUTRIWEEK
           </a>
         </div>
-        <nav className="header-nav">
-          <div className="header-nav1">
-            <a href="#" className="header-nav-link">О нас</a>
-            <a href="#" className="header-nav-link">Помощь</a>
-            <a href="#" className="header-nav-link">Контакты</a>
-          </div>
+        <div className="md:hidden flex items-center">
+          <Hamburger toggled={isMenuOpen} toggle={setIsMenuOpen} />
+        </div>
+        <nav className={`md:flex items-center gap-6 ${isMenuOpen ? 'block' : 'hidden'} md:block`}>
+          {weekPlanLength === 0 && (
+            <div className="flex flex-col md:flex-row gap-6">
+              <a href="#" className="text-green-800">
+                О нас
+              </a>
+              <a href="#" className="text-green-800">
+                Помощь
+              </a>
+              <a href="#" className="text-green-800">
+                Контакты
+              </a>
+            </div>
+          )}
           <SignedOut>
-            <div className="header-nav2">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
               <button
                 onClick={handleSignIn}
-                className="btn-primary"
+                className="bg-green-800 text-white px-4 py-2 rounded"
               >
                 Вход
               </button>
               <button
                 onClick={handleSignUp}
-                className="btn-primary"
+                className="bg-green-800 text-white px-4 py-2 rounded"
               >
                 Регистрация
               </button>
@@ -112,39 +149,42 @@ const Header = ({
           </SignedOut>
           <SignedIn>
             {weekPlanLength > 0 && (
-              <div className="header-nav2">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-6">
                 <button
                   onClick={handleShow}
-                  className="btn-primary"
+                  className="bg-green-800 text-white px-4 py-2 rounded"
                 >
                   Добавить прием пищи
                 </button>
                 <button
                   onClick={handleShow1}
-                  className="btn-primary"
+                  className="bg-green-800 text-white px-4 py-2 rounded"
                 >
                   Добавить меню
                 </button>
                 <button
                   onClick={handleHistoryClick}
-                  className="btn-primary"
+                  className="bg-green-800 text-white px-4 py-2 rounded"
                 >
                   История
                 </button>
                 <button
                   onClick={handleEatInCafeClick}
-                  className="btn-primary"
+                  className="bg-green-800 text-white px-4 py-2 rounded"
                   disabled={loading}
                 >
                   {loading ? "Загрузка..." : "Поесть в кафе"}
                 </button>
               </div>
             )}
-            <UserButton />
+            <UserButton signOutCallback={handleSignOut} />
           </SignedIn>
         </nav>
       </div>
-      <Modal show={showRecommendations} onHide={() => setShowRecommendations(false)}>
+      <Modal
+        show={showRecommendations}
+        onHide={() => setShowRecommendations(false)}
+      >
         <Modal.Header closeButton>
           <Modal.Title>Рекомендуемые блюда</Modal.Title>
         </Modal.Header>
@@ -152,8 +192,8 @@ const Header = ({
           {recommendations.length > 0 ? (
             <ul>
               {recommendations.map((rec, index) => (
-                <li key={index}>
-                  <strong>{rec.dish}</strong> в {rec.restaurant}
+                <li key={index} className="mb-4">
+                  <strong>{rec.dish}</strong> - {rec.price} в {rec.restaurant}
                   <p>{rec.reason}</p>
                 </li>
               ))}
@@ -163,7 +203,10 @@ const Header = ({
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowRecommendations(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowRecommendations(false)}
+          >
             Закрыть
           </Button>
         </Modal.Footer>

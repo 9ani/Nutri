@@ -5,7 +5,7 @@ const FoodHistory = () => {
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const storedHistory = JSON.parse(localStorage.getItem('FoodHistory')) || [];
+            const storedHistory = JSON.parse(localStorage.getItem('foodHistory')) || [];
             setFoodHistory(storedHistory);
         }
     }, []);

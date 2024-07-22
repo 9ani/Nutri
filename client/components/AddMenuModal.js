@@ -67,38 +67,39 @@ const AddMenuModal = ({ show1, handleClose1, nutritionNeeded }) => {
 
   return (
     <Modal show={show1} onHide={handleClose1} centered size="lg">
-      <Modal.Header closeButton style={{ backgroundColor: "#29b260", color: "white" }}>
+      <Modal.Header closeButton className="bg-[#CEE422] text-[#28511D]">
         <Modal.Title>Add Menu</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className="bg-white p-6">
         {loading ? (
           <div className="text-center">
-            <Spinner animation="border" role="status">
-              <span className="visually-hidden">Loading...</span>
+            <Spinner animation="border" role="status" className="text-[#28511D]">
+              <span className="sr-only">Loading...</span>
             </Spinner>
-            <p className="mt-2">Adding menu...</p>
+            <p className="mt-2 text-[#28511D]">Adding menu...</p>
           </div>
         ) : (
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleSubmit} className="space-y-4">
             <Form.Group controlId="formMenuImage">
-              <Form.Label>Upload Menu Image</Form.Label>
+              <Form.Label className="text-[#28511D] font-semibold">Upload Menu Image</Form.Label>
               <Form.Control
                 type="file"
                 accept="image/*"
                 onChange={handleMenuImageChange}
                 required
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-[#28511D] focus:border-[#28511D]"
               />
             </Form.Group>
 
-            {error && <p className="text-danger mt-3">{error}</p>}
-            {responseMessage && <p className="text-success mt-3">{responseMessage}</p>} {/* Display response message */}
+            {error && <p className="text-red-500 mt-3">{error}</p>}
+            {responseMessage && <p className="text-green-500 mt-3">{responseMessage}</p>}
             
             {responseData.length > 0 && (
               <div className="mt-3">
-                <h5>Recommended Food:</h5>
-                <ul>
+                <h5 className="text-[#28511D] font-semibold">Recommended Food:</h5>
+                <ul className="list-disc list-inside space-y-1">
                   {responseData.map((item, index) => (
-                    <li key={index}>{item.food}: {item.quantity} grams</li>
+                    <li key={index} className="text-[#28511D]">{item.food}: {item.quantity} grams</li>
                   ))}
                 </ul>
               </div>
@@ -107,8 +108,7 @@ const AddMenuModal = ({ show1, handleClose1, nutritionNeeded }) => {
             <Button
               variant="primary"
               type="submit"
-              className="mt-3"
-              style={{ backgroundColor: "#28511D", borderColor: "#28511D" }}
+              className="w-full bg-[#28511D] hover:bg-[#1e3b16] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             >
               Add Menu
             </Button>

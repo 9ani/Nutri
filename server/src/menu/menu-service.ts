@@ -9,6 +9,22 @@ dotenv.config();
 const apiKey = process.env.GEMINI_API_KEY;
 const twoGisApiKey = process.env.TWOGIS_API_KEY;
 
+
+const genAI = new GoogleGenerativeAI(apiKey || "");
+
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-pro",
+});
+
+const uploadImage = async (imageUrl: string) => {
+  return {
+    file: {
+      mimeType: 'image/jpeg',
+      uri: imageUrl
+    }
+  };
+};
+
 class MenuService {
   private genAI: GoogleGenerativeAI;
 
@@ -102,7 +118,7 @@ class MenuService {
         const textMenu = await scrapeTextMenu(placeId);
         parsedMenu = textMenu.map(dish => dish.name);
       }
-
+      console.log("Parsed menununu",parsedMenu)
       return {
         images,
         dishes: parsedMenu
@@ -119,31 +135,44 @@ class MenuService {
         console.log('No menu data available for analysis');
         return { recommendations: [], message: 'No menu data available for analysis' };
       }
-
+  
       console.log('Analyzing and recommending dishes...');
       const model = await this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const prompt = `Analyze the following menu data and nutrition scale, and recommend the 3 most suitable dishes:
-        Menu Data: ${JSON.stringify(menuData)}
-        Nutrition Scale: ${JSON.stringify(nutritionScale)}
+      const prompt = `Analyze the following menu data and the user's current nutritional needs (represented by the nutrition scale). Recommend the 3 most suitable dishes that best meet these nutritional requirements. Pay close attention to calorie content and other nutritional factors.
 
-        Please provide recommendations in the following JSON format, enclosed in \`\`\`json tags:
-        \`\`\`json
-        {
-          "recommendations": [
-            {
-              "dish": "Dish Name",
-              "restaurant": "Restaurant Name",
-              "reason": "Reason for recommendation"
-            }
-          ]
-        }
-        \`\`\``;
-
+      Menu Data: ${JSON.stringify(menuData)}
+      User's Nutritional Needs: ${JSON.stringify(nutritionScale)}
+      
+      For each recommended dish, provide:
+      1. The name of the dish
+      2. Its price
+      3. The restaurant name
+      4. A detailed reason for the recommendation, explaining how it aligns with the user's current nutritional needs
+      
+      Prioritize dishes that closely match the required nutritional values. For example, if the user needs 500 calories, recommend dishes that provide close to this amount without significantly exceeding it.
+      
+      Please provide your recommendations in the following JSON format, enclosed in \`\`\`json tags:
+      
+      \`\`\`json
+      {
+        "recommendations": [
+          {
+            "dish": "Dish Name",
+            "price": "Dish Price",
+            "restaurant": "Restaurant Name",
+            "reason": "Detailed explanation of how this dish meets the user's current nutritional needs, including specific nutritional values if available."
+          }
+        ]
+      }
+      \`\`\`
+      
+      Ensure that each recommendation is tailored to the user's specific nutritional requirements as indicated in the nutrition scale.`
+  
       console.log('Generated prompt:', prompt);
       const result = await model.generateContent(prompt);
       const response = await result.response.text();
       console.log('Response from Gemini:', response);
-
+  
       const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
       if (jsonMatch && jsonMatch[1]) {
         try {
@@ -180,10 +209,10 @@ const scrapeMenuImages = async (placeId: string): Promise<string[]> => {
     while (true) {
       previousHeight = await page.evaluate('document.body.scrollHeight');
       await page.evaluate(() => window.scrollBy(0, window.innerHeight));
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for 3 seconds after scrolling
+      await new Promise(resolve => setTimeout(resolve, 3000)); 
 
       const newHeight = await page.evaluate('document.body.scrollHeight');
-      if (newHeight === previousHeight) break; // Exit loop if no new content
+      if (newHeight === previousHeight) break;
     }
 
     console.log('Extracting image URLs from _1qzp1bx elements');
@@ -191,8 +220,8 @@ const scrapeMenuImages = async (placeId: string): Promise<string[]> => {
       const imageUrls: string[] = [];
       const elements = document.querySelectorAll('div._1qzp1bx');
       elements.forEach(el => {
-        const imgElement = el.querySelector('img');
-        if (imgElement) {
+        const imgElements = el.querySelectorAll('img');
+        imgElements.forEach(imgElement => {
           let src = imgElement.src;
           const srcset = imgElement.srcset;
           if (srcset) {
@@ -205,7 +234,7 @@ const scrapeMenuImages = async (placeId: string): Promise<string[]> => {
           if (src && src.includes('photo.2gis.com')) {
             imageUrls.push(src);
           }
-        }
+        });
       });
       return imageUrls;
     });
@@ -220,30 +249,89 @@ const scrapeMenuImages = async (placeId: string): Promise<string[]> => {
   }
 };
 
-const scrapeTextMenu = async (placeId: string): Promise<{ name: string }[]> => {
+const scrapeTextMenuFromRhwe01 = async (placeId: string) => {
   const url = `https://2gis.kz/almaty/firm/${placeId}/tab/prices`;
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
   try {
     console.log(`Navigating to ${url}`);
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
 
     const dishes = await page.evaluate(() => {
-      const dishElements = document.querySelectorAll('div._8mqv20');
-      return Array.from(dishElements).map(div => {
-        const name = div.querySelector('div')?.textContent?.trim();
-        return { name: name || '' };
-      });
+      const dishElements = document.querySelectorAll("article");
+
+      const dishesFromRhwe01 = Array.from(dishElements).map((article) => {
+        const name = article.querySelector("div._rhwe01")?.textContent?.trim() || "Unnamed dish";
+        const price = article.querySelector("span._f9pg1j5")?.textContent?.trim() || "Unknown price";
+
+        return { name, price };
+      }).filter(dish => dish.name && dish.price);
+
+      return dishesFromRhwe01;
     });
 
-    console.log(`Found ${dishes.length} dishes.`);
+    if (dishes.length > 0) {
+      console.log(`Found ${dishes.length} dishes from _rhwe01 class.`);
+      return dishes;
+    }
+
+    return [];
+  } catch (error) {
+    console.error(`Error scraping text menu from Rhwe01 for placeId ${placeId}:`, error);
+    return [];
+  } finally {
+    await browser.close();
+  }
+};
+
+const scrapeTextMenuFrom8mqv20 = async (placeId: string) => {
+  const url = `https://2gis.kz/almaty/firm/${placeId}/tab/prices`;
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+
+  try {
+    console.log(`Navigating to ${url}`);
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+
+    const dishes = await page.evaluate(() => {
+      const dishElements = document.querySelectorAll("div._8mqv20");
+
+      const dishesFrom8mqv20 = Array.from(dishElements).map((dishElement) => {
+        const name = dishElement.querySelector("div")?.textContent?.trim() || "Unnamed dish";
+        const price = dishElement.querySelector("div._5486l5")?.textContent?.trim() || "Unknown price";
+
+        return { name, price };
+      }).filter(dish => dish.name && dish.price);
+
+      return dishesFrom8mqv20;
+    });
+
+    console.log(`Found ${dishes.length} dishes from _8mqv20 class.`);
+    return dishes;
+  } catch (error) {
+    console.error(`Error scraping text menu from 8mqv20 for placeId ${placeId}:`, error);
+    return [];
+  } finally {
+    await browser.close();
+  }
+};
+
+const scrapeTextMenu = async (placeId: string) => {
+  try {
+    let dishes = await scrapeTextMenuFromRhwe01(placeId);
+    
+
+    if (dishes.length === 0) {
+      console.log("No dishes found from Rhwe01 class. Trying 8mqv20 class.");
+      dishes = await scrapeTextMenuFrom8mqv20(placeId);
+    }
+
+
     return dishes;
   } catch (error) {
     console.error(`Error scraping text menu for placeId ${placeId}:`, error);
     return [];
-  } finally {
-    await browser.close();
   }
 };
 
@@ -257,39 +345,38 @@ const fileToGenerativePart = (buffer: Buffer, mimeType: string) => {
   };
 };
 
-const sendImagesToGemini = async (imageUrls: string[]) => {
+ 
+const sendImagesToGemini = async (imageUrls: string[]): Promise<string[]> => {
   try {
     console.log('Sending images to Gemini for analysis...');
-    
+
     const results = await Promise.all(
       imageUrls.map(async (url) => {
+        // Download the image
         const response = await axios.get(url, { responseType: 'arraybuffer' });
-        const imageData = fileToGenerativePart(Buffer.from(response.data), 'image/jpeg');
-        
-        // Send imageData to Gemini and get the response
-        // Adjust this API call based on actual Gemini API endpoint and parameters
-        const geminiResponse = await axios.post('https://gemini-api-endpoint', {
-          image: imageData,
-          prompt: 'Analyze this image and identify the dish and ingredients.',
-        }, {
-          headers: { 'Authorization': `Bearer ${apiKey}` }
-        });
-        
-        console.log('Gemini API response:', geminiResponse.data);
+        const imageBuffer = Buffer.from(response.data, 'binary');
 
-        // Adjust the following based on the actual response format
-        return geminiResponse.data;
+        // Convert the image to base64
+        const base64Image = imageBuffer.toString('base64');
+
+        // Generate content using the base64 image data
+        const result = await model.generateContent([
+          {
+            inlineData: {
+              data: base64Image,
+              mimeType: 'image/jpeg'
+            }
+          },
+          { text: "Analyze this image of menu and identify the dish and ingredients." },
+        ]);
+
+        console.log('Gemini API response:', result.response.text());
+
+        return result.response.text();
       })
     );
 
-    // Process and return the results
-    // Adjust the following based on the actual response format
-    return results.map(result => {
-      // Example: return result.text if the response contains a 'text' field
-      // Modify this based on actual response format
-      return result;
-    });
-    
+    return results;
   } catch (error) {
     console.error('Error sending images to Gemini:', error);
     return [];
