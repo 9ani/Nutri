@@ -39,7 +39,7 @@ const AddMenuModal = ({ show1, handleClose1, nutritionNeeded }) => {
         formData.append(key, value.toString());
       });
 
-      const response = await fetch(`${process.env.BACKEND_URL}/api/v1/add-menu`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/add-menu`, {
         method: "POST",
         body: formData,
       });

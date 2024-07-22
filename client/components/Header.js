@@ -53,7 +53,7 @@ const Header = ({
 
           try {
             const response = await fetch(
-              `${process.env.BACKEND_URL}/api/v1/recommend-food`,
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/recommend-food`,
               {
                 method: "POST",
                 headers: {

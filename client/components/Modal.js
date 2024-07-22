@@ -58,7 +58,7 @@ const ModalComponent = ({
         return;
       }
 
-      const response = await fetch(`${process.env.BACKEND_URL}/api/v1/ration`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/ration`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -74,7 +74,7 @@ const ModalComponent = ({
 
       // Try saving the week plan again
       const saveResponse = await fetch(
-        `${process.env.BACKEND_URL}/api/v1/saveWeekPlan`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/saveWeekPlan`,
         {
           method: "POST",
           headers: {

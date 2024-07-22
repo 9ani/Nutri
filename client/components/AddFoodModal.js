@@ -31,7 +31,7 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData,addFoodHistory, u
       formData.append("description", description);
       formData.append("userID", userID); 
 
-      const response = await fetch(`${process.env.BACKEND_URL}/api/v1/add-food`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/add-food`, {
         method: "POST",
         body: formData,
       });
