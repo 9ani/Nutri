@@ -14,6 +14,7 @@ import AddFoodModal from "../components/AddFoodModal";
 import AddMenuModal from "../components/AddMenuModal";
 import ModalComponent from "../components/Modal";
 import FoodHistoryPreview from "../components/FoodHistoryPreview";
+import DayPlanCard from "../components/DayPlanCard";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -126,10 +127,9 @@ const IndexPage = () => {
     dots: false,
     infinite: false,
     speed: 500,
-    slidesToShow: 1,
+    slidesToShow: 3,
     slidesToScroll: 1,
-    centerMode: true,
-    centerPadding: "200px",
+    centerMode: false,
     focusOnSelect: true,
     autoplay: false,
     arrows: true,
@@ -142,6 +142,22 @@ const IndexPage = () => {
     },
     prevArrow: <SamplePrevArrow />,
     nextArrow: <SampleNextArrow />,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+        },
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+        },
+      },
+    ],
   };
 
   useEffect(() => {
@@ -302,9 +318,7 @@ const IndexPage = () => {
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
   };
-  function formatNumber(value, decimals = 0) {
-    return value.toFixed(decimals);
-  }
+  
 
   useEffect(() => {
     if (weekPlan.length > 0 && flickingRef.current) {
@@ -428,96 +442,64 @@ const IndexPage = () => {
           )}
         </div>
         <div className="w-full md:w-1/2">
-
           {weekPlan.length > 0 && (
-            <div className="relative px-2 md:px-10">
+            <div className="relative w-full px-4 md:px-10">
               {isLoading ? (
                 <div>Loading...</div>
               ) : (
-                <Slider ref={sliderRef} {...settings} className="custom-slider">
-                  {weekPlan.map((dayPlan, index) => (
-                    <div
-                      key={dayPlan.date}
-                      className="border-2 border-green-800 rounded-lg overflow-hidden w-full md:w-11/12 mx-auto cursor-pointer transition-all duration-300 hover:scale-105"
-                      onClick={() => handleCardClick(dayPlan)}
-                    >
-                      <div className="p-4 h-full flex flex-col min-h-[400px] md:h-[400px]">
-                        <h3 className="text-xl font-bold mb-2">
-                          {dayPlan.date} - {dayPlan.day}
-                        </h3>
-                        <div className="flex-grow overflow-auto mb-4">
-                          {dayPlan.meals.map((meal, mealIndex) => (
-                            <p key={mealIndex} className="mb-1">
-                              <strong>{meal.meal}:</strong> {meal.description}
-                            </p>
-                          ))}
-                        </div>
-                        <div className="mt-auto">
-                          <h4 className="font-bold mb-2">Питание</h4>
-                          <p>
-                            Калории:{" "}
-                            {formatNumber(
-                              Math.round(
-                                dayPlan.nutritionSummary.calories_filled
-                              )
-                            )}{" "}
-                            /{" "}
-                            {formatNumber(
-                              Math.round(dayPlan.nutritionSummary.calories)
-                            )}
-                          </p>
-                          <p>
-                            Белки:{" "}
-                            {formatNumber(
-                              Math.round(
-                                dayPlan.nutritionSummary.protein_filled
-                              )
-                            )}
-                            g /{" "}
-                            {formatNumber(
-                              Math.round(dayPlan.nutritionSummary.protein)
-                            )}
-                            g
-                          </p>
-                          <p>
-                            Жиры:{" "}
-                            {formatNumber(
-                              Math.round(dayPlan.nutritionSummary.fats_filled)
-                            )}
-                            g /{" "}
-                            {formatNumber(
-                              Math.round(dayPlan.nutritionSummary.fats)
-                            )}
-                            g
-                          </p>
-                          <p>
-                            Углеводы:{" "}
-                            {formatNumber(
-                              Math.round(
-                                dayPlan.nutritionSummary.carbohydrates_filled
-                              )
-                            )}
-                            g /{" "}
-                            {formatNumber(
-                              Math.round(dayPlan.nutritionSummary.carbohydrates)
-                            )}
-                            g
-                          </p>
-                        </div>
+                <div className="hidden md:block">
+                  <Slider
+                    ref={sliderRef}
+                    {...settings}
+                    className="custom-slider"
+                  >
+                    {weekPlan.map((dayPlan, index) => (
+                      <div key={dayPlan.date} className="px-2">
+                        <DayPlanCard
+                          dayPlan={dayPlan}
+                          handleCardClick={handleCardClick}
+                        />
                       </div>
-                    </div>
-                  ))}
-                </Slider>
+                    ))}
+                  </Slider>
+                </div>
               )}
-                      <FoodHistoryPreview foodHistory={foodHistory} />
-
+              <div className="md:hidden">
+                <DayPlanCard
+                  dayPlan={weekPlan[currentDayIndex]}
+                  handleCardClick={handleCardClick}
+                />
+                <div className="flex justify-between mt-4">
+                  <button
+                    onClick={() =>
+                      setCurrentDayIndex((prev) => Math.max(0, prev - 1))
+                    }
+                    className="bg-green-800 text-white rounded-full w-10 h-10 flex items-center justify-center"
+                    disabled={currentDayIndex === 0}
+                  >
+                    &#10094;
+                  </button>
+                  <button
+                    onClick={() =>
+                      setCurrentDayIndex((prev) =>
+                        Math.min(weekPlan.length - 1, prev + 1)
+                      )
+                    }
+                    className="bg-green-800 text-white rounded-full w-10 h-10 flex items-center justify-center"
+                    disabled={currentDayIndex === weekPlan.length - 1}
+                  >
+                    &#10095;
+                  </button>
+                </div>
+              </div>
             </div>
-            
           )}
-          
+          <div className="mt-8">
+    <FoodHistoryPreview foodHistory={foodHistory} />
+  </div>
         </div>
       </div>
-      
+
       <AddFoodModal
         show={showModal}
         handleClose={handleClose}

@@ -316,3 +316,34 @@ body {
   padding: 10px;
   border-radius: 5px;
 }
+.custom-slider .slick-list {
+  margin: 0 -10px;
+}
+
+.custom-slider .slick-slide > div {
+  padding: 0 10px;
+}
+
+.custom-slider .slick-prev,
+.custom-slider .slick-next {
+  width: 40px;
+  height: 40px;
+}
+
+.custom-slider .slick-prev {
+  left: -10px;
+}
+
+.custom-slider .slick-next {
+  right: -10px;
+}
+
+@media (min-width: 768px) {
+  .custom-slider .slick-prev {
+    left: -20px;
+  }
+
+  .custom-slider .slick-next {
+    right: -20px;
+  }
+}
