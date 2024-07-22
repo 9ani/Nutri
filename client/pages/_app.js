@@ -17,7 +17,6 @@
 
 import { ClerkProvider } from '@clerk/nextjs';
 import '../styles/globals.css';
-require('dotenv').config();
 
 function MyApp({ Component, pageProps }) {
   return (

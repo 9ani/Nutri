@@ -31,7 +31,6 @@ import { Pagination } from "@egjs/flicking-plugins";
 import { Arrow } from "@egjs/flicking-plugins";
 import "@egjs/flicking/dist/flicking.css";
 import "@egjs/flicking-plugins/dist/arrow.css";
-require('dotenv').config();
 
 const Accordion = styled(MuiAccordion)(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
