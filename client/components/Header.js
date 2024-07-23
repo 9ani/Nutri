@@ -38,7 +38,7 @@ const Header = ({
       await signOut();
       localStorage.clear();
       console.log("Local storage cleared");
-      window.location.href = "/"; // Force a full page reload
+      window.location.href = "/"; 
     } catch (error) {
       console.error("Error during sign out:", error);
     }

@@ -352,14 +352,11 @@ const sendImagesToGemini = async (imageUrls: string[]): Promise<string[]> => {
 
     const results = await Promise.all(
       imageUrls.map(async (url) => {
-        // Download the image
         const response = await axios.get(url, { responseType: 'arraybuffer' });
         const imageBuffer = Buffer.from(response.data, 'binary');
 
-        // Convert the image to base64
         const base64Image = imageBuffer.toString('base64');
 
-        // Generate content using the base64 image data
         const result = await model.generateContent([
           {
             inlineData: {

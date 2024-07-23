@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { useUser } from "@clerk/nextjs";
 import NutritionProgress from "../components/NutritionProgress";
 import NutritionDetails from "../components/NutritionDetails";
-import { useSession } from "next-auth/react";
 import {
   CircularProgressbarWithChildren,
   buildStyles,
@@ -13,6 +12,7 @@ import Button from "react-bootstrap/Button";
 import AddFoodModal from "../components/AddFoodModal";
 import AddMenuModal from "../components/AddMenuModal";
 import ModalComponent from "../components/Modal";
+import AuthModal from "../components/AuthModal";
 import FoodHistoryPreview from "../components/FoodHistoryPreview";
 import DayPlanCard from "../components/DayPlanCard";
 import Slider from "react-slick";
@@ -25,13 +25,7 @@ import MuiAccordion from "@mui/material/Accordion";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { styled } from "@mui/material/styles";
-import Flicking, { ViewportSlot } from "@egjs/react-flicking";
-import { Pagination } from "@egjs/flicking-plugins";
-import { Arrow } from "@egjs/flicking-plugins";
-import "@egjs/flicking/dist/flicking.css";
-import "@egjs/flicking-plugins/dist/arrow.css";
 
 const Accordion = styled(MuiAccordion)(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
@@ -64,9 +58,7 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 
 const IndexPage = () => {
   const [weekPlan, setWeekPlan] = useState([]);
-  const [userString, setUserString] = useState("");
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [userData, setUserData] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showModal1, setShowModal1] = useState(false);
   const [todaysNutrition, setTodaysNutrition] = useState({});
@@ -74,23 +66,58 @@ const IndexPage = () => {
   const [expanded, setExpanded] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [foodHistory, setFoodHistory] = useState([]);
-  const flickingRef = useRef(null);
-  const { isSignedIn, user } = useUser();
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
-  const sliderRef = useRef(null);
-  const router = useRouter();
-  const today = new Date().toISOString().split("T")[0];
-  const plugins = [new Pagination({ type: "scroll" })];
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreatingPlan, setIsCreatingPlan] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+  const [hasJustSignedOut, setHasJustSignedOut] = useState(false);
+  const [hasJustCreatedPlan, setHasJustCreatedPlan] = useState(false);
 
-  if (isSignedIn && user) {
-    console.log("User ID:", user.id);
-    console.log("User Data:", user);
-    // You can log more user information if needed
-  }
+  const { isSignedIn, user } = useUser();
+  const router = useRouter();
+  const sliderRef = useRef(null);
+  const today = new Date().toISOString().split("T")[0];
+
+  useEffect(() => {
+    if (isSignedIn && user) {
+      fetchUserData(user.id);
+      setHasJustSignedOut(false);
+    } else {
+      localStorage.removeItem("weekPlan");
+      localStorage.removeItem("foodHistory");
+  
+      const tempWeekPlan = localStorage.getItem("tempWeekPlan");
+  
+      if (tempWeekPlan) {
+        setWeekPlan(JSON.parse(tempWeekPlan));
+        setShowSignInPrompt(true);
+      } else {
+        setWeekPlan([]);
+        setFoodHistory([]);
+      }
+      if (!isSignedIn && !hasJustSignedOut ) {
+        setHasJustSignedOut(true);
+      }
+    }
+  }, [isSignedIn, user]);
 
   useEffect(() => {
     if (weekPlan.length > 0) {
+      setIsLoading(false);
+      setIsCreatingPlan(false);
+      if (!isSignedIn && !hasJustSignedOut) {
+        setShowAuthModal(true);
+        setHasJustCreatedPlan(false);
+      }
+  
+      getTodaysFoodAndNutrition(weekPlan, today).then(
+        ({ todaysFood, todaysNutrition }) => {
+          setTodaysFood(todaysFood);
+          setTodaysNutrition(todaysNutrition);
+        }
+      );
+  
       const todayIndex = weekPlan.findIndex(
         (dayPlan) => dayPlan.date === today
       );
@@ -101,7 +128,8 @@ const IndexPage = () => {
         }
       }
     }
-  }, [weekPlan, today]);
+  }, [weekPlan, today, isSignedIn, hasJustSignedOut]);
+
   const SamplePrevArrow = (props) => {
     const { className, style, onClick } = props;
     return (
@@ -123,14 +151,15 @@ const IndexPage = () => {
       />
     );
   };
+
   const settings = {
     dots: false,
     infinite: false,
     speed: 500,
-    slidesToShow: 2,  // Changed from 3 to 2
+    slidesToShow: 2,
     slidesToScroll: 1,
-    centerMode: true,  // Enable center mode
-    centerPadding: '60px',  // Adjust as needed
+    centerMode: true,
+    centerPadding: "60px",
     focusOnSelect: true,
     autoplay: false,
     arrows: true,
@@ -149,7 +178,7 @@ const IndexPage = () => {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
-          centerPadding: '40px',  // Adjust for smaller screens
+          centerPadding: "40px",
         },
       },
       {
@@ -157,40 +186,12 @@ const IndexPage = () => {
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
-          centerPadding: '20px',  // Adjust for mobile screens
+          centerPadding: "20px",
         },
       },
     ],
   };
 
-  useEffect(() => {
-    if (isSignedIn && user) {
-      fetchUserData(user.id);
-    } else {
-      // Clear local storage when user is not signed in
-      localStorage.removeItem("weekPlan");
-      localStorage.removeItem("foodHistory");
-      setWeekPlan([]);
-      setFoodHistory([]);
-    }
-  }, [isSignedIn, user]);
-
-  const calculatePercentage = (filled, max) => {
-    if (max === 0) return 0;
-    return Math.min((filled / max) * 100, 100);
-  };
-
-  // useEffect(() => {
-  //   if (status === "loading") return; // Do nothing while loading
-  //   if (!session) router.push('/auth/signin'); // Redirect if not logged in
-  // }, [session, status]);
-
-  useEffect(() => {
-    const savedWeekPlan = localStorage.getItem("weekPlan");
-    if (savedWeekPlan) {
-      setWeekPlan(JSON.parse(savedWeekPlan));
-    }
-  }, []);
   const calculateNutritionNeeded = (nutritionSummary) => {
     return {
       calories_needed:
@@ -207,60 +208,15 @@ const IndexPage = () => {
     };
   };
 
-  useEffect(() => {
-    if (weekPlan.length > 0) {
-      setIsLoading(false);
-
-      getTodaysFoodAndNutrition(weekPlan, today).then(
-        ({ todaysFood, todaysNutrition }) => {
-          setTodaysFood(todaysFood);
-          setTodaysNutrition(todaysNutrition);
-          console.log("todaysFood:", todaysFood);
-          console.log("todaysNutrition:", todaysNutrition);
-        }
-      );
-    }
-  }, [weekPlan, today]);
-  useEffect(() => {
-    if (weekPlan.length > 0) {
-      const todayIndex = weekPlan.findIndex(
-        (dayPlan) => dayPlan.date === today
-      );
-      if (todayIndex >= 0) {
-        setCurrentDayIndex(todayIndex);
-        if (sliderRef.current) {
-          sliderRef.current.slickGoTo(todayIndex);
-        }
-      }
-    }
-  }, [weekPlan, today]);
-
-  const handleShow = () => {
-    setShowModal(true);
-  };
-  const handleShow1 = () => {
-    setShowModal1(true);
-  };
-  const handleClose = () => {
-    setShowModal(false);
-  };
-  const handleClose1 = () => {
-    setShowModal1(false);
-  };
-
-  const handleLogin = () => {
-    setShowLoginModal(true);
-  };
-  const closeLoginModal = () => {
-    setShowLoginModal(false);
-  };
-  const handleButtonClick = () => {
-    setModalIsOpen(true);
-  };
+  const handleShow = () => setShowModal(true);
+  const handleShow1 = () => setShowModal1(true);
+  const handleClose = () => setShowModal(false);
+  const handleClose1 = () => setShowModal1(false);
+  const handleLogin = () => setShowLoginModal(true);
+  const handleButtonClick = () => setModalIsOpen(true);
 
   const fetchUserData = async (userId) => {
     try {
-      // Fetch Week Plan
       const weekPlanResponse = await fetch(`/api/weekPlan?userId=${userId}`);
       const weekPlanData = await weekPlanResponse.json();
       if (weekPlanData.weekPlan) {
@@ -268,7 +224,33 @@ const IndexPage = () => {
         localStorage.setItem("weekPlan", JSON.stringify(weekPlanData.weekPlan));
       }
 
-      // Fetch Food History
+      const tempWeekPlan = localStorage.getItem("tempWeekPlan");
+      if (tempWeekPlan) {
+        const saveResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/saveWeekPlan`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              weekPlan: JSON.parse(tempWeekPlan),
+              userID: userId,
+            }),
+          }
+        );
+        if (saveResponse.ok) {
+          const savedWeekPlan = await saveResponse.json();
+          setWeekPlan(savedWeekPlan);
+          localStorage.setItem("weekPlan", JSON.stringify(savedWeekPlan));
+          localStorage.removeItem("tempWeekPlan");
+        } else {
+          throw new Error(
+            `Failed to save week plan: ${saveResponse.statusText}`
+          );
+        }
+      }
+
       const foodHistoryResponse = await fetch(
         `/api/foodHistory?userId=${userId}`
       );
@@ -284,32 +266,32 @@ const IndexPage = () => {
       console.error("Error fetching user data:", error);
     }
   };
+
   const handleCardClick = (dayPlan) => {
-    console.log(dayPlan.nutritionSummary?.calories_filled);
-    console.log(dayPlan.nutritionSummary?.protein_filled);
-    console.log(dayPlan.nutritionSummary?.fats_filled);
     router.push({
       pathname: `/day/${dayPlan.date}`,
       query: { dayPlan: JSON.stringify(dayPlan) },
     });
   };
+
   const addFoodHistory = (newFoodHistory) => {
     setFoodHistory(newFoodHistory);
     localStorage.setItem("FoodHistory", JSON.stringify(newFoodHistory));
-
-    console.log("newFoodHistory:", newFoodHistory);
   };
+
   const updateNutritionData = (updatedWeekPlan) => {
     setWeekPlan(updatedWeekPlan);
     localStorage.setItem("weekPlan", JSON.stringify(updatedWeekPlan));
   };
+
   const getTodaysFoodAndNutrition = async (weekPlan, today) => {
     try {
       const todayPlan = weekPlan.find((dayPlan) => dayPlan.date === today);
       if (todayPlan) {
-        const todaysFood = todayPlan.meals;
-        const todaysNutrition = todayPlan.nutritionSummary;
-        return { todaysFood, todaysNutrition };
+        return {
+          todaysFood: todayPlan.meals,
+          todaysNutrition: todayPlan.nutritionSummary,
+        };
       } else {
         return { todaysFood: null, todaysNutrition: null };
       }
@@ -318,27 +300,10 @@ const IndexPage = () => {
       return { todaysFood: null, todaysNutrition: null };
     }
   };
+
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
   };
-
-  useEffect(() => {
-    if (weekPlan.length > 0 && flickingRef.current) {
-      const todayPlanIndex = weekPlan.findIndex(
-        (dayPlan) => dayPlan.date === today
-      );
-      if (todayPlanIndex >= 0) {
-        flickingRef.current.moveTo(todayPlanIndex, true); // Center today's card
-      }
-    }
-  }, [weekPlan, today]);
-  useEffect(() => {
-    console.log("showModal state:", showModal);
-  }, [showModal]);
-
-  useEffect(() => {
-    console.log("weekPlan:", weekPlan);
-  }, [weekPlan]);
 
   return (
     <div
@@ -355,7 +320,7 @@ const IndexPage = () => {
         todaysNutrition={calculateNutritionNeeded(todaysNutrition)}
       />
       <div className="flex flex-col lg:flex-row items-center justify-between">
-        {weekPlan.length === 0 && (
+        {weekPlan.length === 0 && !isCreatingPlan && (
           <>
             <div className="w-full lg:w-3/4 mb-8 lg:mb-0 lg:ml-16">
               <h2 className="text-4xl lg:text-6xl font-bold text-[#CEE422] mb-4 lg:mb-8 lg:w-2/3">
@@ -376,8 +341,13 @@ const IndexPage = () => {
               <ModalComponent
                 isOpen={modalIsOpen}
                 closeModal={() => setModalIsOpen(false)}
-                setWeekPlan={setWeekPlan}
+                setWeekPlan={(plan) => {
+                  setWeekPlan(plan);
+                  setIsCreatingPlan(true);
+                  setHasJustCreatedPlan(true); 
+                }}
                 userID={user ? user.id : null}
+                setShowAuthModal={setShowAuthModal}
               />
             </div>
             <div className="w-full lg:w-1/2 mt-8 lg:mt-0">
@@ -391,6 +361,25 @@ const IndexPage = () => {
             </div>
           </>
         )}
+        {/* {showSignInPrompt && !isSignedIn && (
+          <div className="w-full text-center">
+            <h2 className="text-2xl font-bold text-[#CEE422] mb-4">
+              Ваш план питания готов!
+            </h2>
+            {!user && (
+              <p className="text-[#CEE422] mb-4">
+                Для сохранения и дальнейшего использования плана, пожалуйста,
+                войдите в систему.
+              </p>
+            )}
+            <button
+              onClick={() => (user ? null : router.push("/sign-in"))}
+              className="bg-[#CEE422] rounded-lg text-base lg:text-lg px-4 py-2"
+            >
+              {user ? "Продолжить" : "Войти"}
+            </button>
+          </div>
+        )} */}
       </div>
       <div className="flex flex-col md:flex-row gap-4 md:gap-12 px-4 md:px-12 mt-8 md:mt-24">
         <div className="w-full md:w-1/2">
@@ -409,12 +398,12 @@ const IndexPage = () => {
               </div>
             </div>
           )}
-          
+
           {weekPlan && weekPlan.length > 0 ? (
             <div>
               <h2 className="text-4xl font-bold text-green-800 mb-4">
-            Рекомендованные блюда:
-          </h2>
+                Рекомендованные блюда:
+              </h2>
               {todaysFood.map((food, index) => (
                 <Accordion
                   key={index}
@@ -504,7 +493,6 @@ const IndexPage = () => {
           )}
         </div>
       </div>
-
       <AddFoodModal
         show={showModal}
         handleClose={handleClose}
@@ -517,6 +505,7 @@ const IndexPage = () => {
         handleClose1={handleClose1}
         nutritionNeeded={calculateNutritionNeeded(todaysNutrition)}
       />
+      <AuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };
