@@ -278,10 +278,10 @@ const ModalComponent = ({
                     type="button"
                     onClick={() => setGoals("набрать массу")}
                     className={`w-full px-4 py-2 border rounded-md ${
-                      goals === "набрать вес" ? "bg-green-200" : "bg-gray-200"
+                      goals === "набрать массу" ? "bg-green-200" : "bg-gray-200"
                     }`}
                   >
-                    Набрать вес
+                    Набрать массу
                   </button>
                   <button
                     type="button"
