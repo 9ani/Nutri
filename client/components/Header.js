@@ -38,6 +38,9 @@ const Header = ({
       await signOut();
       localStorage.clear();
       console.log("Local storage cleared");
+      setHasJustSignedOut(true);
+      setHasJustCreatedPlan(false);
+      setShowAuthModal(false);
       window.location.href = "/"; 
     } catch (error) {
       console.error("Error during sign out:", error);

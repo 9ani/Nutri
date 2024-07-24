@@ -73,11 +73,12 @@ class MenuService {
 
   private async getMenuData(places: any[]): Promise<any[]> {
     try {
-      const menuList = JSON.parse(await fs.readFile('menuList.json', 'utf-8'));
+      // const menuListPath = 'D:\\Visual studio\\Incubator\\Nutri\\server\\menuList.json';
+      const menuList = JSON.parse(await fs.readFile("menuList.json", 'utf-8'));
       console.log('Loaded menuList.json:', menuList);
-
+  
       const menuData: any[] = [];
-
+  
       for (const place of places) {
         console.log(`Processing place: ${place.name} (ID: ${place.id})`);
         const menuItem = menuList.find((item: any) => item.id === place.id);
@@ -85,17 +86,23 @@ class MenuService {
           console.log(`Found existing menu data for ${place.name}`);
           menuData.push(menuItem);
         } else {
-          console.log(`Parsing menu for ${place.name}`);
+          console.log(`Cafe "${place.name}" not found in menuList.json. Parsing menu...`);
           const parsedMenu = await this.parseMenu(place.id);
-          menuData.push({
+          const newMenuItem = {
             id: place.id,
             name: place.name,
             parsedImages: parsedMenu.images,
             parsedMenu: parsedMenu.dishes
-          });
+          };
+          menuData.push(newMenuItem);
+  
+          // Optionally, you can add the newly parsed menu to menuList.json
+          menuList.push(newMenuItem);
+          await fs.writeFile("menuList.json", JSON.stringify(menuList, null, 2));
+          console.log(`Added "${place.name}" to menuList.json`);
         }
       }
-
+  
       console.log(`Processed ${menuData.length} menus`);
       return menuData;
     } catch (error) {
@@ -104,21 +111,23 @@ class MenuService {
     }
   }
 
+
+
   private async parseMenu(placeId: string): Promise<{ images: string[], dishes: string[] }> {
     try {
       console.log(`Parsing menu for placeId ${placeId}`);
       const images = await scrapeMenuImages(placeId);
       let parsedMenu: string[] = [];
-
+  
       if (images.length > 0) {
         console.log(`Found images for placeId ${placeId}. Sending images to Gemini.`);
         parsedMenu = await sendImagesToGemini(images);
       } else {
         console.log(`No images found for placeId ${placeId}. Falling back to text menu.`);
         const textMenu = await scrapeTextMenu(placeId);
-        parsedMenu = textMenu.map(dish => dish.name);
+        parsedMenu = textMenu.map(dish => `${dish.name} - ${dish.price}`);
       }
-      console.log("Parsed menununu",parsedMenu)
+  
       return {
         images,
         dishes: parsedMenu
@@ -128,7 +137,6 @@ class MenuService {
       return { images: [], dishes: [] };
     }
   }
-
   private async analyzeAndRecommend(menuData: any[], nutritionScale: any): Promise<any> {
     try {
       if (menuData.length === 0) {

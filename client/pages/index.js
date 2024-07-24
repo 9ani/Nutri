@@ -78,7 +78,6 @@ const IndexPage = () => {
   const router = useRouter();
   const sliderRef = useRef(null);
   const today = new Date().toISOString().split("T")[0];
-
   useEffect(() => {
     if (isSignedIn && user) {
       fetchUserData(user.id);
@@ -86,9 +85,9 @@ const IndexPage = () => {
     } else {
       localStorage.removeItem("weekPlan");
       localStorage.removeItem("foodHistory");
-  
+
       const tempWeekPlan = localStorage.getItem("tempWeekPlan");
-  
+
       if (tempWeekPlan) {
         setWeekPlan(JSON.parse(tempWeekPlan));
         setShowSignInPrompt(true);
@@ -96,7 +95,7 @@ const IndexPage = () => {
         setWeekPlan([]);
         setFoodHistory([]);
       }
-      if (!isSignedIn && !hasJustSignedOut ) {
+      if (!isSignedIn && !hasJustSignedOut) {
         setHasJustSignedOut(true);
       }
     }
@@ -106,18 +105,18 @@ const IndexPage = () => {
     if (weekPlan.length > 0) {
       setIsLoading(false);
       setIsCreatingPlan(false);
-      if (!isSignedIn && !hasJustSignedOut) {
+      if (!isSignedIn && !hasJustSignedOut && !hasJustCreatedPlan) {
         setShowAuthModal(true);
         setHasJustCreatedPlan(false);
       }
-  
+
       getTodaysFoodAndNutrition(weekPlan, today).then(
         ({ todaysFood, todaysNutrition }) => {
           setTodaysFood(todaysFood);
           setTodaysNutrition(todaysNutrition);
         }
       );
-  
+
       const todayIndex = weekPlan.findIndex(
         (dayPlan) => dayPlan.date === today
       );
@@ -193,6 +192,15 @@ const IndexPage = () => {
   };
 
   const calculateNutritionNeeded = (nutritionSummary) => {
+    if (!nutritionSummary) {
+      return {
+        calories_needed: 0,
+        protein_needed: 0,
+        fats_needed: 0,
+        carbs_needed: 0,
+      };
+    }
+
     return {
       calories_needed:
         (nutritionSummary.calories || 0) -
@@ -344,7 +352,7 @@ const IndexPage = () => {
                 setWeekPlan={(plan) => {
                   setWeekPlan(plan);
                   setIsCreatingPlan(true);
-                  setHasJustCreatedPlan(true); 
+                  setHasJustCreatedPlan(true);
                 }}
                 userID={user ? user.id : null}
                 setShowAuthModal={setShowAuthModal}
@@ -404,30 +412,34 @@ const IndexPage = () => {
               <h2 className="text-4xl font-bold text-green-800 mb-4">
                 Рекомендованные блюда:
               </h2>
-              {todaysFood.map((food, index) => (
-                <Accordion
-                  key={index}
-                  expanded={expanded === `panel${index + 1}`}
-                  onChange={handleChange(`panel${index + 1}`)}
-                >
-                  <AccordionSummary
-                    aria-controls={`panel${index + 1}d-content`}
-                    id={`panel${index + 1}d-header`}
+              {todaysFood && todaysFood.length > 0 ? (
+                todaysFood.map((food, index) => (
+                  <Accordion
+                    key={index}
+                    expanded={expanded === `panel${index + 1}`}
+                    onChange={handleChange(`panel${index + 1}`)}
                   >
-                    <Typography>{food.meal}</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography>{food.description}</Typography>
-                    {food.img_url && (
-                      <img
-                        src={food.img_url}
-                        alt={food.meal}
-                        className="w-full mt-2"
-                      />
-                    )}
-                  </AccordionDetails>
-                </Accordion>
-              ))}
+                    <AccordionSummary
+                      aria-controls={`panel${index + 1}d-content`}
+                      id={`panel${index + 1}d-header`}
+                    >
+                      <Typography>{food.meal}</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Typography>{food.description}</Typography>
+                      {food.img_url && (
+                        <img
+                          src={food.img_url}
+                          alt={food.meal}
+                          className="w-full mt-2"
+                        />
+                      )}
+                    </AccordionDetails>
+                  </Accordion>
+                ))
+              ) : (
+                <p>No meals available for today.</p>
+              )}
             </div>
           ) : (
             <p></p>
@@ -505,7 +517,14 @@ const IndexPage = () => {
         handleClose1={handleClose1}
         nutritionNeeded={calculateNutritionNeeded(todaysNutrition)}
       />
-      <AuthModal show={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <AuthModal
+        show={showAuthModal && !isSignedIn && hasJustCreatedPlan}
+        onClose={() => {
+          setShowAuthModal(false);
+          setHasJustCreatedPlan(false);
+        }}
+        setHasJustSignedOut={setHasJustSignedOut}
+      />
     </div>
   );
 };

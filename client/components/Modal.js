@@ -102,6 +102,7 @@ const ModalComponent = ({
       setIsSubmitting(false);
       closeModal();
       localStorage.setItem("tempWeekPlan", JSON.stringify(responseData));
+      setHasJustCreatedPlan(true);
       setShowAuthModal(true);
       
 
@@ -275,7 +276,7 @@ const ModalComponent = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setGoals("набрать вес")}
+                    onClick={() => setGoals("набрать массу")}
                     className={`w-full px-4 py-2 border rounded-md ${
                       goals === "набрать вес" ? "bg-green-200" : "bg-gray-200"
                     }`}
