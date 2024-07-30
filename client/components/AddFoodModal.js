@@ -5,11 +5,12 @@ import Form from "react-bootstrap/Form";
 import Spinner from "react-bootstrap/Spinner";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const AddFoodModal = ({ show, handleClose, updateNutritionData,addFoodHistory, userID }) => {
+const AddFoodModal = ({ show, handleClose, updateNutritionData, addFoodHistory, userID }) => {
   const [photo, setPhoto] = useState(null);
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [foodResult, setFoodResult] = useState(null);
 
   const handlePhotoChange = (e) => {
     setPhoto(e.target.files[0]);
@@ -29,7 +30,7 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData,addFoodHistory, u
       const formData = new FormData();
       formData.append("photo", photo);
       formData.append("description", description);
-      formData.append("userID", userID); 
+      formData.append("userID", userID);
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/add-food`, {
         method: "POST",
@@ -37,15 +38,17 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData,addFoodHistory, u
       });
 
       if (response.ok) {
-        console.log("Food added successfully!");
         const data = await response.json();
-        console.log("Added food",data);
+        console.log("Added food", data);
 
         if (data && data.updatedWeekPlan) {
           updateNutritionData(data.updatedWeekPlan.weekPlan);
-          console.log("ALL DATATATAT HISTROY",data.allUserFoodHistory);
           addFoodHistory(data.allUserFoodHistory);
-          handleClose();
+          setFoodResult({
+            name: data.foodAnalysis.dish,
+            imageUrl: data.allUserFoodHistory[data.allUserFoodHistory.length - 1].imageUrl,
+            nutrients: data.nutritionData.totalNutrients,
+          });
         } else {
           throw new Error("Missing week plan data in response");
         }
@@ -60,15 +63,49 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData,addFoodHistory, u
     }
   };
 
+  const renderNutrients = (nutrients) => {
+    const nutrientList = [
+      { key: "ENERC_KCAL", label: "Calories" },
+      { key: "PROCNT", label: "Protein" },
+      { key: "FAT", label: "Fat" },
+      { key: "CHOCDF", label: "Carbohydrates" },
+      { key: "FIBTG", label: "Fiber" },
+      { key: "SUGAR", label: "Sugar" },
+    ];
+
+    return (
+      <ul className="list-group">
+        {nutrientList.map((nutrient) => (
+          nutrients[nutrient.key] && (
+            <li key={nutrient.key} className="list-group-item d-flex justify-content-between align-items-center">
+              {nutrient.label}
+              <span>{`${Math.round(nutrients[nutrient.key].quantity)} ${nutrients[nutrient.key].unit}`}</span>
+            </li>
+          )
+        ))}
+      </ul>
+    );
+  };
+
+  const handleModalClose = () => {
+    handleClose();
+    // Reset state so that the form reappears when the modal opens again
+    setPhoto(null);
+    setDescription("");
+    setLoading(false);
+    setError(null);
+    setFoodResult(null);
+  };
+
   return (
     <Modal
       show={show}
-      onHide={handleClose}
+      onHide={handleModalClose}
       centered
       size="lg"
     >
       <Modal.Header closeButton className="bg-green-500 text-white">
-        <Modal.Title>Add Food</Modal.Title>
+        <Modal.Title>{foodResult ? "Food Added" : "Add Food"}</Modal.Title>
       </Modal.Header>
       <Modal.Body className="p-6">
         {loading ? (
@@ -77,6 +114,22 @@ const AddFoodModal = ({ show, handleClose, updateNutritionData,addFoodHistory, u
               <span className="sr-only">Loading...</span>
             </Spinner>
             <p className="mt-2">Adding food...</p>
+          </div>
+        ) : foodResult ? (
+          <div>
+            <h3 className="text-xl font-bold mb-4">{foodResult.name}</h3>
+            <div className="flex justify-center mb-4">
+              <img src={foodResult.imageUrl} alt={foodResult.name} className="max-w-full h-auto rounded-lg" />
+            </div>
+            <h4 className="text-lg font-semibold mb-2">Nutrients:</h4>
+            {renderNutrients(foodResult.nutrients)}
+            <Button 
+              variant="secondary" 
+              onClick={handleModalClose} 
+              className="mt-4 w-full bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
+              Close
+            </Button>
           </div>
         ) : (
           <Form onSubmit={handleSubmit} className="space-y-4">

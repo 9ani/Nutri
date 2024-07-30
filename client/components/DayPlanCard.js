@@ -1,44 +1,46 @@
+import React from 'react';
 
-function formatNumber(value, decimals = 0) {
-    return value.toFixed(decimals);
-  }
-const DayPlanCard = ({ dayPlan, handleCardClick }) => (
+const DayPlanCard = ({ dayPlan, handleCardClick }) => {
+  const formatNutrition = (filled, total) => {
+    return `${Math.round(filled)} / ${Math.round(total)}`;
+  };
+
+  return (
     <div
-      className="border-2 border-green-800 rounded-lg overflow-hidden w-full mx-auto cursor-pointer transition-all duration-300 hover:scale-105 bg-white shadow-lg"
+      className="border-2 border-green-800 rounded-2xl overflow-hidden w-full mx-auto cursor-pointer transition-all duration-300 hover:scale-105 bg-gradient-to-br from-white to-green-50 shadow-xl"
       onClick={() => handleCardClick(dayPlan)}
     >
-      <div className="p-4 h-full flex flex-col min-h-[400px] md:h-[400px]">
-        <h3 className="text-xl font-bold mb-2">
+      <div className="p-6 h-full flex flex-col min-h-[450px] md:h-[450px]">
+        <h3 className="text-2xl font-bold mb-4 text-green-800">
           {dayPlan.date} - {dayPlan.day}
         </h3>
-        <div className="flex-grow overflow-auto mb-4">
-          {dayPlan.meals.map((meal, mealIndex) => (
-            <p key={mealIndex} className="mb-1">
-              <strong>{meal.meal}:</strong> {meal.description}
+        <div className="flex-grow overflow-auto mb-6 pr-2 custom-scrollbar">
+          <h4 className="font-bold mb-3 text-lg text-green-700">Основные блюда:</h4>
+          <ul className="list-none">
+            {dayPlan.meals.slice(0, 3).map((meal, index) => (
+              <li key={index} className="mb-2 pl-4 border-l-4 border-green-500">
+                <span className="font-semibold">{meal.meal}:</span> {meal.description.split(',')[0]}
+              </li>
+            ))}
+          </ul>
+          {dayPlan.meals.length > 3 && (
+            <p className="text-sm text-gray-600 mt-3 italic">
+              И еще {dayPlan.meals.length - 3} блюд...
             </p>
-          ))}
+          )}
         </div>
-        <div className="mt-auto">
-          <h4 className="font-bold mb-2">Питание</h4>
-          <p>
-            Калории: {formatNumber(Math.round(dayPlan.nutritionSummary.calories_filled))} /{' '}
-            {formatNumber(Math.round(dayPlan.nutritionSummary.calories))}
-          </p>
-          <p>
-            Белки: {formatNumber(Math.round(dayPlan.nutritionSummary.protein_filled))}g /{' '}
-            {formatNumber(Math.round(dayPlan.nutritionSummary.protein))}g
-          </p>
-          <p>
-            Жиры: {formatNumber(Math.round(dayPlan.nutritionSummary.fats_filled))}g /{' '}
-            {formatNumber(Math.round(dayPlan.nutritionSummary.fats))}g
-          </p>
-          <p>
-            Углеводы: {formatNumber(Math.round(dayPlan.nutritionSummary.carbohydrates_filled))}g /{' '}
-            {formatNumber(Math.round(dayPlan.nutritionSummary.carbohydrates))}g
-          </p>
+        <div className="mt-auto bg-green-100 p-4 rounded-xl">
+          <h4 className="font-bold mb-3 text-lg text-green-800">Питание</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <p className="text-green-700">Калории: <span className="font-semibold">{formatNutrition(dayPlan.nutritionSummary.calories_filled, dayPlan.nutritionSummary.calories)}</span></p>
+            <p className="text-green-700">Белки: <span className="font-semibold">{formatNutrition(dayPlan.nutritionSummary.protein_filled, dayPlan.nutritionSummary.protein)}g</span></p>
+            <p className="text-green-700">Жиры: <span className="font-semibold">{formatNutrition(dayPlan.nutritionSummary.fats_filled, dayPlan.nutritionSummary.fats)}g</span></p>
+            <p className="text-green-700">Углеводы: <span className="font-semibold">{formatNutrition(dayPlan.nutritionSummary.carbohydrates_filled, dayPlan.nutritionSummary.carbohydrates)}g</span></p>
+          </div>
         </div>
       </div>
     </div>
   );
+};
 
 export default DayPlanCard;

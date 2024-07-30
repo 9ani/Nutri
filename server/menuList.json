@@ -51135,5 +51135,287 @@
     "name": "Жемчужное, кафе",
     "parsedImages": [],
     "parsedMenu": []
+  },
+  {
+    "id": "70000001036847685",
+    "name": "La Tartine, французская пекарня",
+    "parsedImages": [
+      "https://i4.photo.2gis.com/images/branch/0/30258560173594388_f7a9_656x340.jpg"
+    ],
+    "parsedMenu": [
+      "The image shows a receipt beside a takeout container of food.  The food is unidentifiable, but appears to contain eggs and a tortilla.  There are no ingredients listed on the receipt, only prices. \n"
+    ]
+  },
+  {
+    "id": "70000001031741851",
+    "name": "Город любви, кафе",
+    "parsedImages": [
+      "https://i4.photo.2gis.com/images/branch/0/30258560086842973_8794_656x340.jpg"
+    ],
+    "parsedMenu": [
+      "The dish is \"Креветки в сливочном соусе\" which translates to \"Shrimp in cream sauce\".  Unfortunately, a more specific list of ingredients is not available. \n"
+    ]
+  },
+  {
+    "id": "70000001048401293",
+    "name": "Baristacoffee, кофейня",
+    "parsedImages": [],
+    "parsedMenu": [
+      "Эспрессо. - 800 T",
+      "Американо 300 мл. - 850 T",
+      "Американо 400мл. - 950 T",
+      "Латте 300мл. - 1 050 T",
+      "Латте 400мл. - 1 150 T",
+      "Капучино 300мл. - 1 050 T",
+      "Капучино 400мл. - 1 150 T",
+      "Мокко 300мл. - 1 250 T",
+      "Мокко 400мл. - 1 350 T",
+      "Раф 300мл. - 1 300 T",
+      "Раф 400мл. - 1 400 T",
+      "Горячий шоколад 300 мл. - 1 150 T",
+      "Горячий шоколад 400 мл. - 1 250 T",
+      "Матча латте 300 мл. - 1 250 T",
+      "Матча латта 400 мл. - 1 350 T",
+      "Флэт уайт. - 950 T",
+      "Чай черный/зеленый 400 мл. - 500 T",
+      "Чай Жасминовый зеленый 400 мл. - 500 T",
+      "Облепиховый 400мл. - 950 T",
+      "Ягодно-Мятный 400мл. - 950 T",
+      "Имбирный 400мл. - 950 T",
+      "Ташкентский 400мл. - 950 T",
+      "Марокканский 400мл. - 950 T",
+      "Сироп. - 200 T",
+      "Альтернативное молоко . - 500 T",
+      "Взбитые сливки. - 300 T",
+      "Мёд. - 200 T",
+      "Дополнительный лимон/апельсин. - 200 T",
+      "Ванильный милкшейк. - 1 350 T",
+      "Шоколадный милкшейк. - 1 350 T",
+      "Орео. - 1 450 T",
+      "Ягодный. - 1 550 T",
+      "Фруктовый смузи - 1 490 T",
+      "Тропический - 990 T",
+      "Клубничника-маракуйя - 990 T",
+      "Айс тиа - 990 T",
+      "Мохито - 990 T",
+      "Киви-мята - 1 290 T",
+      "Ягодный смузи - 1 490 T",
+      "ICE Американо - 990 T",
+      "ICE Латте ореховый - 1 090 T",
+      "Гляссе - 1 190 T",
+      "Фраппучино - 1 590 T",
+      "ICE Латте сникерс - 1 090 T",
+      "ICE Латте ванильный - 1 090 T",
+      "ICE шоколад - 1 290 T",
+      "Фрапучино шоколадный - 1 590 T"
+    ]
+  },
+  {
+    "id": "70000001089759595",
+    "name": "Doner Saga, летнее кафе быстрого питания ",
+    "parsedImages": [
+      "https://i1.photo.2gis.com/photo-gallery/b2f7599e-a372-4ee1-830d-dc3ef915fe3d_656x340.jpg"
+    ],
+    "parsedMenu": [
+      "The image shows a menu with different categories of food and drinks. \n\n**Burgers (Бургеры)**\n- Burger with nuggets (Бургер с наггетсами) - This burger likely contains chicken nuggets, possibly with sauce.\n- Chicken burger (Бургер куриный) - A classic burger with a chicken patty.\n- Cheeseburger (Чизбургер) - A burger with a beef patty and cheese, likely cheddar.\n- Double cheeseburger (Дабл чизбургер) - A larger cheeseburger with two beef patties and likely double the cheese.\n\n**Snacks (Закуска)**\n- Fries (Фри) - Likely classic french fries.\n- Cheese (Сыр) - Possibly a cheese plate or a single serving of cheese.\n- Cheese with green onions (Сыр с зеленым луком) -  A cheese dish with added green onions for flavor.\n- Nuggets (Наггетсы) - Chicken nuggets, likely deep-fried.\n- Wings (Крылышки) - Chicken wings, likely deep-fried and possibly tossed in sauce.\n\n**Drinks (Напитки)**\n- Coca-Cola (Coca-Cola) - The classic carbonated soft drink.\n- Fanta (Fanta) - Another carbonated soft drink, likely orange flavored.\n\n**Lemonade (Лимонад)**\n- Kiwi lime (Киви лайм) - A refreshing lemonade flavored with kiwi and lime.\n- Mango-passion fruit (Манго-маракуя) - Tropical lemonade with mango and passion fruit flavors.\n\nThe menu also includes prices for each item in Russian rubles. However, some of the pricing is unclear from the image provided. \n"
+    ]
+  },
+  {
+    "id": "9429940000924784",
+    "name": "Shipudim, кафе",
+    "parsedImages": [
+      "https://i8.photo.2gis.com/photo-gallery/eb0ebeba-09f8-4e59-b742-f22f0cbb7244_656x340.jpg"
+    ],
+    "parsedMenu": [
+      "The image shows a menu page with two types of Shashlik, a popular dish in Eastern Europe and Central Asia that consists of skewered and grilled cubes of meat. \n\n**Top Image:** Шашлык по-кавказски (Shashlik po-Kavkazski) which translates to Shashlik, Caucasus style. This version is 1690 (currency not specified).  The ingredients are not specified but likely include lamb or beef, based on the appearance. \n\n**Bottom Image:** Шашлык по-Ташкентски (Shashlik po-Tashkentski) meaning Shashlik, Tashkent style, priced at 1100. Again, ingredients aren't listed but judging by the visual, it's most likely lamb or beef.\n\nBoth descriptions on the menu specify that the price includes only one skewer of Shashlik. \n"
+    ]
+  },
+  {
+    "id": "70000001090443635",
+    "name": "Coffee Snack, кофейня",
+    "parsedImages": [],
+    "parsedMenu": []
+  },
+  {
+    "id": "70000001030102582",
+    "name": "Жан плов лагман, центр еды",
+    "parsedImages": [
+      "https://i2.photo.2gis.com/photo-gallery/16be4a24-a7d6-45ef-ac0a-94a15b22b1c9_656x340.jpg"
+    ],
+    "parsedMenu": [
+      "The image shows a menu, a bowl of soup and another dish. It does not contain enough information to identify the dish or the ingredients. \n"
+    ]
+  },
+  {
+    "id": "70000001049114141",
+    "name": "Coffee Milka, кофейня",
+    "parsedImages": [],
+    "parsedMenu": [
+      "Атмосфера - Цена не указана",
+      "перекус студента - 1 990 T"
+    ]
+  },
+  {
+    "id": "70000001041538101",
+    "name": "Trendy, ресто-бар ",
+    "parsedImages": [
+      "https://i9.photo.2gis.com/photo-gallery/465ba5d2-e697-457a-bed2-87d671166310_656x340.jpg"
+    ],
+    "parsedMenu": [
+      "The image shows a menu with different types of drinks and snacks. \n\n**[ВЪ ПЬЯНОЕ ПИВО] - DRAFT BEER**\n\n* **PAULANER** 0.33ML - 2390 \n* **CORONA EXTRA** 0.33ML - 2390\n* **BITBURGER 0%** 0.33ML - 2090\n* **MILLER** 0.33ML - 1590\n\n**[РАЗЛИВНОЕ ПИВО] - BOTTLED BEER**\n\n* **BUD BELGIUM LAGER** 0.33/0.5 - 1890/3290\n* **BAVARIA HOLLAND BEEROLFND** 0.33/0.5 - 1590/2590\n* **VELKOPOPVISCKY KOZEL** 0.33/0.5 - 1090/1690\n\n**[ЗАКУСКИ] - SNACKS**\n\n* **АРАХИС** - peanuts - 1190\n* **ЧИПСЫ** - chips - 1290\n* **ЧЕЧЕЛ** - smoked cheese - 1190\n* **ФИСТАШКИ** - pistachios - 1490\n\n**[НАПИТКИ] - DRINKS**\n\n* **COCA-COLA.FANTA.SPRITE** 0.25ML - 990\n* **RED BULL** 0.25ML - 1490\n* **SAMAL** 0.25ML - 790\n* **TONIC SCHWEPPES** 0.450ML - 1090\n* **SAMAL** 0.5ML - 1090\n* **SWELL** 0.25ML - 1490\n* **BORJOMI** 0.33ML - 1190 \n* **SWELL** 0.75ML - 2590 \n\nThe prices are shown next to each item. \n"
+    ]
+  },
+  {
+    "id": "70000001075829417",
+    "name": "Mochi, кафе-кондитерская",
+    "parsedImages": [],
+    "parsedMenu": []
+  },
+  {
+    "id": "70000001057492723",
+    "name": "Coffeetор, экспресс-кофейня",
+    "parsedImages": [],
+    "parsedMenu": [
+      "Американо 0,35 - 750 T",
+      "Американо 0,45 - 950 T",
+      "Латте 0,35 - 850 T",
+      "Латте 0,45 - 1 050 T",
+      "Капучино 0,35 - 850 T",
+      "Капучино 0,45 - 1 050 T",
+      "РАФ 0,35 - 990 T",
+      "РАФ 0,45 - 1 190 T",
+      "Мокко 0,35 - 990 T",
+      "Мокко 0,45 - 1 190 T",
+      "Флэт Уайт - 900 T",
+      "Регуляр 0,35 - 800 T",
+      "Регуляр 0,4 - 1 000 T",
+      "Ягодный чай 0.35 - 850 T",
+      "Малиновый чай 0.35 - 850 T",
+      "Марокканский чай 0.35 - 850 T",
+      "Листовые чаи 0.35 - 800 T",
+      "Облепиховый чай 0.35 - 850 T",
+      "Чай казахский 0.35 - 490 T",
+      "Тарталетка «Сникерс» - 950 T",
+      "Морковный пирог - 780 T",
+      "Макарунс - 1 300 T",
+      "Альфахорес - 350 T",
+      "Орешки со сгущёнкой - 650 T",
+      "ПП батончик - 690 T",
+      "Протеиновый батончик - 990 T",
+      "Сэндвич \"Радость\" - 990 T",
+      "Сэндвич Здоровье - 540 T",
+      "Сэндвич «Пушкин» - 540 T",
+      "Сэндвич «Вкус в квадрате» - 750 T"
+    ]
+  },
+  {
+    "id": "70000001048777724",
+    "name": "Трдельник, кофейня",
+    "parsedImages": [],
+    "parsedMenu": [
+      "Айс Латте - 990 T"
+    ]
+  },
+  {
+    "id": "70000001036248917",
+    "name": "Lanzhou, сеть ресторанов быстрого питания",
+    "parsedImages": [],
+    "parsedMenu": []
+  },
+  {
+    "id": "70000001051073128",
+    "name": "Додо Пицца, сеть пиццерий",
+    "parsedImages": [
+      "https://i3.photo.2gis.com/images/branch/0/30258560087737610_670b_656x340.jpg"
+    ],
+    "parsedMenu": [
+      "The image shows two menu items:\n\n1. **Cinnamon rolls:** Described as hot, sweet rolls with spicy cinnamon and sugar.\n2. **Syrniki with raspberry jam:** Described as a favorite dessert, with fried syrniki made from cottage cheese, served with raspberry jam. \n"
+    ]
+  },
+  {
+    "id": "70000001066143897",
+    "name": "Urbo coffee, экспресс-кофейня",
+    "parsedImages": [],
+    "parsedMenu": []
+  },
+  {
+    "id": "70000001089473732",
+    "name": "Kymyz_mix, кафе",
+    "parsedImages": [],
+    "parsedMenu": []
+  },
+  {
+    "id": "70000001064918311",
+    "name": "Urbo coffee, экспресс-кофейня",
+    "parsedImages": [],
+    "parsedMenu": []
+  },
+  {
+    "id": "9429940000788570",
+    "name": "Manga Japanese Restaurant, ресторан",
+    "parsedImages": [],
+    "parsedMenu": [
+      "Godzilla - 18 000 T",
+      "Наруто - 13 000 T",
+      "One Peace - 14 500 T",
+      "Покемон - 8 000 T",
+      "Темпура - 10 500 T",
+      "Фила - 4 300 T",
+      "Грин Фила - 4 800 T",
+      "Фила гриль - 4 500 T",
+      "Калифорнимейшн - 2 900 T",
+      "Дежавю темпура - 2 800 T",
+      "Лосось темпура - 2 800 T",
+      "Угорь темпура - 2 900 T",
+      "Ролл с тунцом \"Оторо\" - 4 600 T",
+      "Кадзуто - 3 200 T",
+      "Ролл с лососем - 2 200 T",
+      "Ролл с угрем - 2 500 T",
+      "Ролл с авокадо - 2 200 T",
+      "Ролл с огурцом - 900 T",
+      "Хот Шик - 3 900 T",
+      "Mangarita - 3 250 T",
+      "Shaman King - 4 200 T",
+      "Бибоп - 4 200 T",
+      "Mushrooms Notes - 3 400 T",
+      "Cheese Samurai - 3 850 T",
+      "Код Гиасс - 5 500 T",
+      "Гинтоко - 4 700 T",
+      "Вазари - 3 850 T",
+      "Дейдара - 4 500 T",
+      "Фокачча - 1 600 T",
+      "Мисо классический - 1 100 T",
+      "Мисо с морепродуктами - 2 200 T",
+      "Том Ям - 2 400 T",
+      "Том Ям на кокосовом молоке - 2 600 T",
+      "Рамен с курицей и классическим бульоном - 1 900 T",
+      "Рамен с морепродуктами и классическим бульоном - 2 200 T",
+      "Рамен с говядиной и классическим бульоном - 2 900 T",
+      "Рамен Том Ям - 2 500 T",
+      "Бао бургер с курицей - 2 800 T",
+      "Краб поп корн - 1 700 T",
+      "Ёсидо ролл - 1 500 T",
+      "Люка ролл - 1 600 T",
+      "Удон с курицей в классическом соусе - 2 000 T",
+      "Удон с морепродуктами и устричным соусом - 2 300 T",
+      "Удон с говядиной и соусом блэк-пеппер. - 2 300 T",
+      "Гречневая лапша с куриным филе в классическом соусе - 2 000 T"
+    ]
+  },
+  {
+    "id": "70000001032978742",
+    "name": "Qaimaq, ресторан современной казахской кухни",
+    "parsedImages": [
+      "https://i7.photo.2gis.com/images/branch/0/30258560086830717_4d82_656x340.jpg"
+    ],
+    "parsedMenu": [
+      "The menu shows the following dishes and ingredients:\n\n**Овсяное с клюквой** - Oatmeal with cranberries\n**Торт Qaimar с клюквой** - Cake Qaimar with cranberries\n**Брауни с орехом пекан и шоколадным штрейзелем подается с ванильным мороженым** - Brownie with pecans and chocolate streusel served with vanilla ice cream\n**Домашнее мороженое 1 шарик** - Homemade ice cream 1 scoop\n**«Чай по-казахски» с крошкой жёлта и иримшиком** - \"Kazakh tea\" with crumbs of fat and iris\n**Ванильное / шоколадное / «Малиновое смузи»** - Vanilla / Chocolate / \"Raspberry smoothie\"\n\n**Prices**\n* Cake Qaimar with cranberries - 2500 тнг\n* Brownie with pecans and chocolate streusel served with vanilla ice cream - 3100 тнг\n* \"Kazakh tea\" with crumbs of fat and iris - 1200 тнг\n* Vanilla / Chocolate / \"Raspberry smoothie\" - 1100 тнг \n"
+    ]
+  },
+  {
+    "id": "70000001086844263",
+    "name": "I`m Cafe, кофейня ",
+    "parsedImages": [],
+    "parsedMenu": []
   }
 ]

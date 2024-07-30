@@ -1,5 +1,5 @@
-import { Flat, Heat, Nested } from "@alptugidin/react-circular-progress-bar";
-
+import React from "react";
+import { Nested } from "@alptugidin/react-circular-progress-bar";
 
 const NutritionProgress = ({ nutritionSummary, date }) => {
   const calculatePercentage = (filled, max) => {
@@ -8,10 +8,12 @@ const NutritionProgress = ({ nutritionSummary, date }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-      <h3 className="text-[#28511D] text-2xl font-bold mb-4">{date}</h3>
+    <div className="bg-gradient-to-br from-white to-green-50 p-8 rounded-2xl shadow-lg mb-8 transform hover:scale-105 transition-all duration-300">
+      <h3 className="text-[#28511D] text-3xl font-bold mb-6 text-center font-sans">
+        {date}
+      </h3>
 
-      <div className="w-80 h-80">
+      <div className="w-full max-w-md mx-auto">
         <Nested
           circles={[
             {
@@ -34,7 +36,7 @@ const NutritionProgress = ({ nutritionSummary, date }) => {
               text: "Жиры",
               value: calculatePercentage(
                 nutritionSummary?.fats_filled || 0,
-                nutritionSummary?.fat || 100
+                nutritionSummary?.fats || 100
               ),
               color: "#28511D",
             },
@@ -48,17 +50,17 @@ const NutritionProgress = ({ nutritionSummary, date }) => {
             },
           ]}
           sx={{
-            bgColor: "#f0f0f0",
+            bgColor: "rgba(230, 230, 230, 0.6)",
             fontWeight: "bold",
-            fontFamily: "Trebuchet MS",
+            fontFamily: "Trebuchet MS, sans-serif",
             strokeLinecap: "round",
-            loadingTime: 1000,
+            loadingTime: 1500,
             valueAnimation: true,
             intersectionEnabled: true,
+            textColor: "#28511D",
           }}
         />
       </div>
-      
     </div>
   );
 };

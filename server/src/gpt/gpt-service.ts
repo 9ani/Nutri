@@ -2,10 +2,16 @@ import axios from "axios";
 import fs from "fs";
 import AWS from "aws-sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { WeekPlanDocument, UserJson, WeekPlan } from "./gpt-types";
+import {
+  WeekPlanDocument,
+  UserJson,
+  WeekPlanModel,
+  UserModel,
+  FoodHistoryModel,
+  FoodHistoryDocument,
+} from "./gpt-types";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { FoodHistory, FoodHistoryDocument } from "./gpt-types";
 
 dotenv.config();
 
@@ -34,38 +40,6 @@ AWS.config.update({
 const s3 = new AWS.S3();
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-const weekPlanSchema = new mongoose.Schema(
-  {
-    weekPlan: {
-      type: Object,
-      required: true,
-    },
-    userID: {
-      type: String,
-      required: true,
-    },
-  },
-  { timestamps: true }
-);
-
-const WeekPlanModel = mongoose.model("WeekPlan", weekPlanSchema);
-
-const FoodHistorySchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    imageUrl: { type: String, required: true },
-    dateEaten: { type: Date, required: true },
-    calories: { type: Number, required: true },
-    proteins: { type: Number, required: true },
-    fats: { type: Number, required: true },
-    carbohydrates: { type: Number, required: true },
-    userID: { type: String, required: true },
-  },
-  { timestamps: true }
-);
-
-const FoodHistoryModel = mongoose.model("FoodHistory", FoodHistorySchema);
 
 interface MulterFile {
   fieldname: string;
@@ -101,12 +75,13 @@ class GptService implements GptServiceInterface {
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = await response.text();
+      const cleanedText = text.replace(/^```json\n/, '').replace(/\n```$/, '');
 
-      console.log("Response from Gemini:", text);
+      console.log("Response from Gemini:", cleanedText);
 
       if (text) {
         try {
-          const parsedRes = JSON.parse(text);
+          const parsedRes = JSON.parse(cleanedText);
           console.log("Parsed Response:", parsedRes);
           parsedRes.weekPlan.forEach((dayPlan: any) =>
             dayPlan.meals.forEach((meal: any) => console.log(meal))
@@ -202,9 +177,7 @@ class GptService implements GptServiceInterface {
       //   dayPlan.meals.forEach((meal: any) => console.log(meal))
       // );
 
-      const newWeekPlan = new WeekPlanModel({ weekPlan, userID }); // Include userID
-      // console.log("New wEEEKKEKEKEKKE", newWeekPlan);
-      // console.log("SUERRR ID", userID);
+      const newWeekPlan = new WeekPlanModel({ weekPlan, userID }); // Ensure userID is included
       const savedWeekPlan = await newWeekPlan.save();
       console.log("Week plan saved to MongoDB");
 
@@ -282,15 +255,19 @@ class GptService implements GptServiceInterface {
     userID: string
   ): Promise<any> {
     try {
-      console.log(userID);
+      console.log("Adding food for userID:", userID);
       if (!photo) {
         throw new Error("No photo provided");
       }
+      if (!userID) {
+        throw new Error("No userID provided");
+      }
+  
       const photoData = fs.readFileSync(photo.path);
       if (!bucketName) {
         throw new Error("AWS_BUCKET_NAME is not set in environment variables.");
       }
-
+  
       const params = {
         Bucket: bucketName,
         Key: `${Date.now()}_${photo.originalname}`,
@@ -298,11 +275,11 @@ class GptService implements GptServiceInterface {
         ACL: "public-read",
         ContentType: photo.mimetype,
       };
-
+  
       const uploadResult = await s3.upload(params).promise();
       const photoUrl = uploadResult.Location;
-      console.log(photoUrl);
-
+      console.log("Photo uploaded to:", photoUrl);
+  
       const prompt = `By looking at Image or by ${description}, please identify the dish and list its ingredients in JSON format. DO NOT WRITE ANYTHING EXCEPT JSON. Here is the example of response format: 
             {
   "dish": "Pasta with meatballs and tomato sauce",
@@ -314,7 +291,7 @@ class GptService implements GptServiceInterface {
     "garlic",
     "black pepper"
   ]
-}`;
+  }`;
       const image = {
         inlineData: {
           data: Buffer.from(fs.readFileSync(photo.path)).toString("base64"),
@@ -325,59 +302,66 @@ class GptService implements GptServiceInterface {
       const response = await result.response;
       const text = await response.text();
       console.log("Food Analysis Response:", text);
-
-      const foodAnalysis = JSON.parse(text);
+  
+      let foodAnalysis;
+      try {
+        foodAnalysis = JSON.parse(text);
+      } catch (parseError) {
+        console.error("Error parsing food analysis:", parseError);
+        throw new Error("Failed to parse food analysis response");
+      }
+  
       if (!foodAnalysis || !foodAnalysis.dish) {
-        throw new Error(
-          "Unable to retrieve dish and ingredients from food analysis."
-        );
+        throw new Error("Unable to retrieve dish from food analysis.");
       }
-      if (foodAnalysis && foodAnalysis.dish && foodAnalysis.ingredients) {
-        const dishName = foodAnalysis.dish;
-
-        const nutritionData = await this.getNutrition(dishName);
-
-        const foodHistory: FoodHistoryDocument = new FoodHistoryModel({
-          name: foodAnalysis.dish,
-          imageUrl: photoUrl,
-          dateEaten: new Date(),
-          calories: nutritionData.calories || 0,
-          proteins: nutritionData.totalNutrients.PROCNT?.quantity || 0,
-          fats: nutritionData.totalNutrients.FAT?.quantity || 0,
-          carbohydrates: nutritionData.totalNutrients.CHOCDF?.quantity || 0,
-          userID: userID,
-        });
-
-        await foodHistory.save();
-        console.log("Food history saved to database");
-
-        const allUserFoodHistory = await FoodHistoryModel.find({
-          userID: userID,
-        }).sort({ dateEaten: -1 });
-        console.log("All User Food History:", allUserFoodHistory);
-
-        fs.unlinkSync(photo.path);
-        const updatedWeekPlan = await this.updateNutritionToWeekPlan(
-          nutritionData,
-          userID
-        );
-        console.log("Updated Week Plan:", updatedWeekPlan);
-
-        return {
-          foodAnalysis,
-          nutritionData,
-          updatedWeekPlan,
-          allUserFoodHistory,
-        };
-      } else {
-        console.error(
-          "Unable to retrieve dish and ingredients from food analysis."
-        );
-        throw new Error("Unable to retrieve dish and ingredients");
-      }
+  
+      const dishName = foodAnalysis.dish;
+      console.log("Identified dish:", dishName);
+  
+      const nutritionData = await this.getNutrition(dishName);
+      console.log("Nutrition data retrieved:", nutritionData);
+  
+      const foodHistory: FoodHistoryDocument = new FoodHistoryModel({
+        name: foodAnalysis.dish,
+        imageUrl: photoUrl,
+        dateEaten: new Date(),
+        calories: nutritionData.calories || 0,
+        proteins: nutritionData.totalNutrients.PROCNT?.quantity || 0,
+        fats: nutritionData.totalNutrients.FAT?.quantity || 0,
+        carbohydrates: nutritionData.totalNutrients.CHOCDF?.quantity || 0,
+        userID: userID,
+      });
+  
+      await foodHistory.save();
+      console.log("Food history saved to database");
+  
+      const allUserFoodHistory = await FoodHistoryModel.find({
+        userID: userID,
+      }).sort({ dateEaten: -1 });
+      console.log("All User Food History retrieved, count:", allUserFoodHistory.length);
+  
+      fs.unlinkSync(photo.path);
+      console.log("Temporary photo file deleted");
+  
+      const updatedWeekPlan = await this.updateNutritionToWeekPlan(
+        nutritionData,
+        userID
+      );
+      console.log("Week plan updated with new nutrition data");
+  
+      return {
+        foodAnalysis,
+        nutritionData,
+        updatedWeekPlan,
+        allUserFoodHistory,
+      };
     } catch (error) {
-      console.error("Error analyzing food:", error);
-      throw new Error("Error analyzing food");
+      console.error("Error in addFood:", error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to process food: ${error.message}`);
+      } else {
+        throw new Error("An unknown error occurred while processing food");
+      }
     }
   }
   private async updateNutritionToWeekPlan(
@@ -387,45 +371,37 @@ class GptService implements GptServiceInterface {
     try {
       console.log("updateNutritionToWeekPlan IDIDIDIDID", userID);
       const recentWeekPlan = await WeekPlanModel.findOne({ userID: userID });
-
+  
       if (!recentWeekPlan) {
         throw new Error(`No week plan found for user ${userID}`);
       }
-
+  
       console.log("Recent Week Plan:", recentWeekPlan);
-
-      if (!recentWeekPlan) {
-        throw new Error("No week plan found");
-      }
-
+  
       const today = new Date().toISOString().split("T")[0];
       console.log("Today's Date:", today);
-
+  
       const dayPlanIndex = recentWeekPlan.weekPlan.findIndex((day: any) => {
         const planDate = day.date;
         console.log(planDate, today);
         return planDate === today;
       });
       console.log("Day Plan Index:", dayPlanIndex);
-
+  
       if (dayPlanIndex === -1) {
         throw new Error("No day plan found for today");
       }
-
+  
       const dayPlan = recentWeekPlan.weekPlan[dayPlanIndex];
-
-      // Prepare the fields to be updated
+  
       const updateFields: any = {};
-
+  
       if (nutritionData.calories) {
         console.log(`Adding calories: ${nutritionData.calories}`);
-        updateFields[
-          `weekPlan.${dayPlanIndex}.nutritionSummary.calories_filled`
-        ] =
-          dayPlan.nutritionSummary.calories_filled +
-          Number(nutritionData.calories);
+        updateFields[`weekPlan.${dayPlanIndex}.nutritionSummary.calories_filled`] =
+          dayPlan.nutritionSummary.calories_filled + Number(nutritionData.calories);
       }
-
+  
       if (nutritionData.totalNutrients.VITA_RAE?.quantity) {
         console.log(
           `Adding vitamin A: ${nutritionData.totalNutrients.VITA_RAE.quantity}`
@@ -436,7 +412,7 @@ class GptService implements GptServiceInterface {
           dayPlan.nutritionSummary.vitamins.vitaminA_filled +
           nutritionData.totalNutrients.VITA_RAE.quantity;
       }
-
+  
       if (nutritionData.totalNutrients.VITC?.quantity) {
         console.log(
           `Adding vitamin C: ${nutritionData.totalNutrients.VITC.quantity}`
@@ -447,7 +423,7 @@ class GptService implements GptServiceInterface {
           dayPlan.nutritionSummary.vitamins.vitaminC_filled +
           nutritionData.totalNutrients.VITC.quantity;
       }
-
+  
       if (nutritionData.totalNutrients.VITB6A?.quantity) {
         console.log(
           `Adding vitamin B: ${nutritionData.totalNutrients.VITB6A.quantity}`
@@ -458,7 +434,7 @@ class GptService implements GptServiceInterface {
           dayPlan.nutritionSummary.vitamins.vitaminB_filled +
           nutritionData.totalNutrients.VITB6A.quantity;
       }
-
+  
       if (nutritionData.totalNutrients.CA?.quantity) {
         console.log(
           `Adding calcium: ${nutritionData.totalNutrients.CA.quantity}`
@@ -469,7 +445,7 @@ class GptService implements GptServiceInterface {
           dayPlan.nutritionSummary.minerals.calcium_filled +
           nutritionData.totalNutrients.CA.quantity;
       }
-
+  
       if (nutritionData.totalNutrients.FE?.quantity) {
         console.log(`Adding iron: ${nutritionData.totalNutrients.FE.quantity}`);
         updateFields[
@@ -478,7 +454,7 @@ class GptService implements GptServiceInterface {
           dayPlan.nutritionSummary.minerals.iron_filled +
           nutritionData.totalNutrients.FE.quantity;
       }
-
+  
       if (nutritionData.totalNutrients.MG?.quantity) {
         console.log(
           `Adding magnesium: ${nutritionData.totalNutrients.MG.quantity}`
@@ -489,18 +465,16 @@ class GptService implements GptServiceInterface {
           dayPlan.nutritionSummary.minerals.magnesium_filled +
           nutritionData.totalNutrients.MG.quantity;
       }
-
+  
       if (nutritionData.totalNutrients.PROCNT?.quantity) {
         console.log(
           `Adding protein: ${nutritionData.totalNutrients.PROCNT.quantity}`
         );
-        updateFields[
-          `weekPlan.${dayPlanIndex}.nutritionSummary.protein_filled`
-        ] =
+        updateFields[`weekPlan.${dayPlanIndex}.nutritionSummary.protein_filled`] =
           dayPlan.nutritionSummary.protein_filled +
           nutritionData.totalNutrients.PROCNT.quantity;
       }
-
+  
       if (nutritionData.totalNutrients.CHOCDF?.quantity) {
         console.log(
           `Adding carbohydrates: ${nutritionData.totalNutrients.CHOCDF.quantity}`
@@ -511,25 +485,25 @@ class GptService implements GptServiceInterface {
           dayPlan.nutritionSummary.carbohydrates_filled +
           nutritionData.totalNutrients.CHOCDF.quantity;
       }
-
+  
       if (nutritionData.totalNutrients.FAT?.quantity) {
         console.log(`Adding fat: ${nutritionData.totalNutrients.FAT.quantity}`);
         updateFields[`weekPlan.${dayPlanIndex}.nutritionSummary.fats_filled`] =
-          dayPlan.nutritionSummary.fats_filled +
-          nutritionData.totalNutrients.FAT.quantity;
+          dayPlan.nutritionSummary.fats_filled + nutritionData.totalNutrients.FAT.quantity;
       }
-
+      console.log("Day PLANan", dayPlan);
+  
       // Update the week plan in the database
       const updateResult = await WeekPlanModel.findOneAndUpdate(
-        { userID: userID, "weekPlan._id": dayPlan._id },
+        { userID: userID },
         { $set: updateFields },
         { new: true }
       );
-
+  
       if (!updateResult) {
         throw new Error("Failed to update week plan");
       }
-
+  
       console.log("Week plan updated with nutrition data");
       return updateResult;
     } catch (error) {
@@ -562,8 +536,56 @@ class GptService implements GptServiceInterface {
       throw new Error("Error fetching nutrition data");
     }
   }
+
+  async extendWeekPlan(userID: string): Promise<WeekPlanDocument | null> {
+    try {
+      const existingPlan = await WeekPlanModel.findOne({ userID });
+      if (!existingPlan) {
+        throw new Error("No existing plan found for user");
+      }
+  
+      const userJson = await this.getUserJsonById(userID);
+      if (!userJson) {
+        throw new Error("Failed to fetch user data for generating plan");
+      }
+  
+      const newWeekPlan = await this.getRation(userJson);
+      console.log("New Week Plan:", JSON.stringify(newWeekPlan));
+  
+      if (!newWeekPlan || !Array.isArray(newWeekPlan)) {
+        throw new Error("Failed to generate a valid new week plan");
+      }
+  
+      
+  
+      // Append the new week plan to the existing plan
+      existingPlan.weekPlan.push(...newWeekPlan);
+  
+      const savedPlan = await existingPlan.save();
+      console.log("Saved plan:", JSON.stringify(savedPlan));
+  
+      return savedPlan.weekPlan;
+    } catch (error: any) {
+      console.error("Error extending week plan:", error);
+      throw new Error(`Error extending week plan: ${error.message}`);
+    }
+  }
+
+  private async getUserJsonById(userID: string): Promise<UserJson | null> {
+    try {
+      const userData: any = await UserModel.findOne({ userID }).lean();
+      if (!userData) return null;
+
+      return userData;
+    } catch (error) {
+      console.error("Error fetching userJson:", error);
+      return null;
+    }
+  }
 }
+
 console.log(new Date().toISOString().slice(0, 10));
+
 const systemPrompt = `You are a professional nutritionist providing personalized nutrition plans. Based on the user's data such as age, weight, allergies, and dietary preferences, you will generate a comprehensive daily meal plan for a week. 
 Provide meals that are popular in Central Asia, including countries like Russia and Kazakhstan. The plan should include all necessary vitamins and nutrients, ensuring a balanced diet. The meal must be responded in russian and emglish languages.
 Even if the user has specific dietary restrictions, you should provide a suitable alternative. Even if the user asks for a ration for a day,
@@ -581,7 +603,7 @@ provide a ration plan for a week starting from today's date ${new Date()
             "meals": [
                 {
                     "meal": "Meal type (e.g., breakfast, lunch, dinner, snack)",
-                    "description": "Detailed description of the meal (very short name of meal in English)  including ingredients and nutritional information",
+                    "description": "Detailed description of the meal (very short name of meal in English) including ingredients and nutritional information",
                     "img_url": "empty string",
                 }
             ],

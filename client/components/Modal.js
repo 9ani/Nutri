@@ -10,8 +10,8 @@ const ModalComponent = ({
   onSubmit,
   setWeekPlan,
   userID,
-  setShowAuthModal
-
+  setShowAuthModal,
+  setHasJustCreatedPlan // Add this parameter
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [age, setAge] = useState("");
@@ -67,21 +67,19 @@ const ModalComponent = ({
       return;
     }
     setIsSubmitting(true);
-
+  
     const userJson = {
       age: parseInt(age),
       weight: parseInt(weight),
       height: parseInt(height),
       gender,
       allergies: allergies.split(",").map((item) => item.trim()),
-      dietaryPreferences: dietaryPreferences
-        .split(",")
-        .map((item) => item.trim()),
+      dietaryPreferences: dietaryPreferences.split(",").map((item) => item.trim()),
       goals,
       physicalActivity,
       goalCompletionTime,
     };
-
+    localStorage.setItem("tempUserData", JSON.stringify(userJson));
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/ration`,
@@ -90,45 +88,21 @@ const ModalComponent = ({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ userJson }),
+          body: JSON.stringify({ userJson, userID }) // Pass userID here
         }
       );
       if (!response.ok) {
         throw new Error(`Failed to submit data: ${response.statusText}`);
       }
-
+  
       const responseData = await response.json();
       setWeekPlan(responseData);
       setIsSubmitting(false);
       closeModal();
       localStorage.setItem("tempWeekPlan", JSON.stringify(responseData));
-      setHasJustCreatedPlan(true);
+      setHasJustCreatedPlan(true);  
       setShowAuthModal(true);
-      
-
-      // if (!userID) {
-      //   alert("Пожалуйста, войдите в систему для сохранения данных.");
-      // } else {
-      //   const saveResponse = await fetch(
-      //     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/saveWeekPlan`,
-      //     {
-      //       method: "POST",
-      //       headers: {
-      //         "Content-Type": "application/json",
-      //       },
-      //       body: JSON.stringify({ weekPlan: responseData, userID: userID }),
-      //     }
-      //   );
-
-      //   if (saveResponse.ok) {
-      //     const saveData = await saveResponse.json();
-      //     localStorage.setItem("weekPlan", JSON.stringify(saveData));
-      //   } else {
-      //     throw new Error(
-      //       `Failed to save week plan: ${saveResponse.statusText}`
-      //     );
-      //   }
-      // }
+  
     } catch (error) {
       setIsSubmitting(false);
       setError(error.message);
