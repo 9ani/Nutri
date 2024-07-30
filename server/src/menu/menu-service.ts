@@ -52,16 +52,18 @@ class MenuService {
         nutritionScale
       );
 
-      // Get the city name from the user's coordinates
       const cityName = await this.getCityName(latitude, longitude);
 
       if (!cityName) {
         throw new Error("Unable to determine city name from coordinates");
       }
-
       const places = await this.searchPlacesInRadius(latitude, longitude);
       console.log("Found places:", places.length, places);
-      const menuData = await this.getMenuData(places);
+      
+      const menuData = cityName && ['Алматы', 'Астана', 'Шымкент', 'Уральск'].includes(cityName) && places.length > 0
+      ? await this.getMenuData(places, cityName)
+      : await this.parseNewCafes(places.slice(0, 10));
+      
       console.log("Processed menu data:", menuData);
       console.log("Processed menu data length:", menuData.length);
       const recommendations = await this.analyzeAndRecommend(
@@ -102,7 +104,8 @@ class MenuService {
       );
 
       // Save new menu items after processing
-      await this.saveNewMenuItems();
+      await this.saveNewMenuItems(cityName);
+
 
       return { recommendations: recommendationsWithCoordinates };
     } catch (error) {
@@ -112,6 +115,23 @@ class MenuService {
         error: "An error occurred while processing your request.",
       };
     }
+  }
+
+  private async parseNewCafes(places: any[]): Promise<any[]> {
+    const menuData: any[] = [];
+    for (const place of places) {
+      console.log(`Parsing menu for ${place.name} (ID: ${place.id})`);
+      const parsedMenu = await this.parseMenu(place.id);
+      const newMenuItem = {
+        id: place.id,
+        name: place.name,
+        parsedImages: parsedMenu.images,
+        parsedMenu: parsedMenu.dishes,
+      };
+      menuData.push(newMenuItem);
+      this.newMenuItems.push(newMenuItem);
+    }
+    return menuData;
   }
 
   private async getCityName(
@@ -185,24 +205,33 @@ class MenuService {
     }
   }
 
-  private async saveNewMenuItems() {
+  private async saveNewMenuItems(cityName: string) {
     if (this.newMenuItems.length > 0) {
       try {
-        const menuList = JSON.parse(
-          await fs.readFile("menuList.json", "utf-8")
-        );
+        const menuFileName = this.getMenuFileName(cityName);
+        if (!menuFileName) {
+          console.warn(`No menu file found for city: ${cityName}. New items will not be saved.`);
+          return;
+        }
+  
+        const filePath = `menuList/${menuFileName}`;
+        let menuList: any[] = [];
+        try {
+          const fileContent = await fs.readFile(filePath, 'utf-8');
+          menuList = JSON.parse(fileContent);
+        } catch (readError) {
+          console.warn(`Error reading ${filePath}. Creating new file.`);
+        }
+  
         menuList.push(...this.newMenuItems);
-        await fs.writeFile("menuList.json", JSON.stringify(menuList, null, 2));
-        console.log(
-          `Added ${this.newMenuItems.length} new items to menuList.json`
-        );
+        await fs.writeFile(filePath, JSON.stringify(menuList, null, 2));
+        console.log(`Added ${this.newMenuItems.length} new items to ${filePath}`);
         this.newMenuItems = []; // Clear the new items after saving
       } catch (error) {
         console.error("Error saving new menu items:", error);
       }
     }
   }
-
   private async searchPlacesInRadius(
     latitude: number,
     longitude: number
@@ -231,12 +260,22 @@ class MenuService {
     }
   }
 
-  private async getMenuData(places: any[]): Promise<any[]> {
+  private async getMenuData(places: any[], cityName: string): Promise<any[]> {
     try {
-      const menuList = JSON.parse(await fs.readFile("menuList.json", "utf-8"));
-
+      const menuFileName = this.getMenuFileName(cityName);
+      let menuList: any[] = [];
+  
+      if (menuFileName) {
+        try {
+          const fileContent = await fs.readFile(`menuList/${menuFileName}`, 'utf-8');
+          menuList = JSON.parse(fileContent);
+        } catch (readError) {
+          console.warn(`Error reading ${menuFileName}. Starting with empty menu list.`);
+        }
+      }
+  
       const menuData: any[] = [];
-
+  
       for (const place of places) {
         console.log(`Processing place: ${place.name} (ID: ${place.id})`);
         const menuItem = menuList.find((item: any) => item.id === place.id);
@@ -244,9 +283,7 @@ class MenuService {
           console.log(`Found existing menu data for ${place.name}`);
           menuData.push(menuItem);
         } else {
-          console.log(
-            `Cafe "${place.name}" not found in menuList.json. Parsing menu...`
-          );
+          console.log(`Cafe "${place.name}" not found in ${menuFileName || 'any menu file'}. Parsing menu...`);
           const parsedMenu = await this.parseMenu(place.id);
           const newMenuItem = {
             id: place.id,
@@ -255,18 +292,33 @@ class MenuService {
             parsedMenu: parsedMenu.dishes,
           };
           menuData.push(newMenuItem);
-
+  
           // Store new menu item in memory instead of writing to file immediately
           this.newMenuItems.push(newMenuItem);
           console.log(`Added "${place.name}" to memory`);
         }
       }
-
+  
       console.log(`Processed ${menuData.length} menus`);
       return menuData;
     } catch (error) {
       console.error("Error in getMenuData:", error);
       return [];
+    }
+  }
+  
+  private getMenuFileName(cityName: string): string | null {
+    switch (cityName) {
+      case 'Алматы':
+        return 'menuAlmaty.json';
+      case 'Астана':
+        return 'menuAstana.json';
+      case 'Шымкент':
+        return 'menuShymkent.json';
+      case 'Уральск':
+        return 'menuUralsk.json';
+      default:
+        return null;
     }
   }
 
