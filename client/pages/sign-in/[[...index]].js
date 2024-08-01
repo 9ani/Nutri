@@ -5,6 +5,7 @@ const SignInPage = () => (
     <SignIn 
       path="/sign-in" 
       routing="path" 
+      forceRedirectUrl="/"
       appearance={{
         elements: {
           formButtonPrimary: "bg-[#CEE422] hover:bg-[#28511D] text-[#28511D] hover:text-[#CEE422]",
