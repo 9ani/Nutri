@@ -50,10 +50,10 @@ const FoodHistory = () => {
                     <h2 className="text-2xl font-semibold text-green-800 mb-2">{item.name}</h2>
                     <p className="text-gray-600 mb-4">Date Eaten: {formattedDate}</p>
                     <div className="grid grid-cols-2 gap-4">
-                      <p className="text-gray-700"><span className="font-semibold">Calories:</span> {item.calories}</p>
-                      <p className="text-gray-700"><span className="font-semibold">Proteins:</span> {item.proteins}g</p>
-                      <p className="text-gray-700"><span className="font-semibold">Fats:</span> {item.fats}g</p>
-                      <p className="text-gray-700"><span className="font-semibold">Carbohydrates:</span> {item.carbohydrates}g</p>
+                      <p className="text-gray-700"><span className="font-semibold">Calories:</span> {item.calories.toFixed(1)}</p>
+                      <p className="text-gray-700"><span className="font-semibold">Proteins:</span> {item.proteins.toFixed(1)}g</p>
+                      <p className="text-gray-700"><span className="font-semibold">Fats:</span> {item.fats.toFixed(1)}g</p>
+                      <p className="text-gray-700"><span className="font-semibold">Carbohydrates:</span> {item.carbohydrates.toFixed(1)}g</p>
                     </div>
                   </div>
                 </div>

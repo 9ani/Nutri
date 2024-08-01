@@ -3,7 +3,23 @@ import GptService from "./gpt-service";
 import { WeekPlanDocument } from "./gpt-types";
 import multer from "multer";
 
-const upload = multer({ dest: "uploads/" });
+const upload = multer({
+  dest: "uploads/",
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = [
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'image/heic',
+      'image/heif'
+    ];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PNG, JPEG, WEBP, HEIC, and HEIF are allowed.'));
+    }
+  }
+});
 
 interface MulterRequest extends Request {
   file: Express.Multer.File;
@@ -75,7 +91,6 @@ class GptController {
     try {
       const multerReq = req as MulterRequest;
       const photo = multerReq.file;
-      const description = multerReq.body.description;
       const userID = multerReq.body.userID;
 
       if (!photo) {
@@ -85,7 +100,6 @@ class GptController {
 
       const analysisResult = await this.gptService.addFood(
         photo,
-        description,
         userID
       );
       res.json(analysisResult);

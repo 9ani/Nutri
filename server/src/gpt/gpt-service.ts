@@ -251,7 +251,6 @@ class GptService implements GptServiceInterface {
 
   async addFood(
     photo: MulterFile | undefined,
-    description: string,
     userID: string
   ): Promise<any> {
     try {
@@ -280,7 +279,7 @@ class GptService implements GptServiceInterface {
       const photoUrl = uploadResult.Location;
       console.log("Photo uploaded to:", photoUrl);
   
-      const prompt = `By looking at Image or by ${description}, please identify the dish and list its ingredients in JSON format. DO NOT WRITE ANYTHING EXCEPT JSON. Here is the example of response format: 
+      const prompt = `By looking at Image , please identify the dish and list its ingredients in JSON format. DO NOT WRITE ANYTHING EXCEPT JSON. Here is the example of response format: 
             {
   "dish": "Pasta with meatballs and tomato sauce",
   "ingredients": [

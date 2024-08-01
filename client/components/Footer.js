@@ -3,7 +3,7 @@ import React from 'react';
 const Footer = ({ hasWeekPlan }) => {
   return (
     <footer className={`${
-      hasWeekPlan ? "bg-white" : "bg-[#CEE422]"
+      hasWeekPlan && hasWeekPlan.length>0 ? "bg-[#CEE422]" : "bg-white"
     } mx-4 md:mx-12 rounded-full h-20 md:h-20 relative mt-8`}>
       <div className="flex flex-col md:flex-row justify-between items-center h-full px-4 md:px-6 py-4">
         <div className="flex items-center justify-center">

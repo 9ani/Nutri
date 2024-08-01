@@ -6,8 +6,8 @@ export default async function handler(req, res) {
     const { userJson, userID } = req.body;
 
     // Logging received data
-    console.log('Received userJson:', JSON.stringify(userJson, null, 2));
-    console.log('Received userID:', userID);
+    // console.log('Received userJson:', JSON.stringify(userJson, null, 2));
+    // console.log('Received userID:', userID);
 
     if (!userID || !userJson) {
       console.error('Missing userID or userJson');
@@ -16,27 +16,27 @@ export default async function handler(req, res) {
 
     try {
       // Log MongoDB connection attempt
-      console.log('Connecting to MongoDB...');
+      // console.log('Connecting to MongoDB...');
       await mongoose.connect(process.env.MONGODB_URI);
-      console.log('Connected to MongoDB');
+      // console.log('Connected to MongoDB');
 
       // Check if the user already exists
-      console.log('Checking if user exists...');
+      // console.log('Checking if user exists...');
       const existingUser = await UserModel.findOne({ userID });
-      console.log('Existing user:', existingUser);
+      // console.log('Existing user:', existingUser);
 
       if (existingUser) {
-        console.log('User already exists, updating user data...');
+        // console.log('User already exists, updating user data...');
         await UserModel.updateOne({ userID }, userJson);
-        console.log('User data updated successfully');
+        // console.log('User data updated successfully');
       } else {
-        console.log('Creating a new user...');
+        // console.log('Creating a new user...');
         const newUser = new UserModel({
           userID,
           ...userJson
         });
         await newUser.save();
-        console.log('New user created successfully');
+        // console.log('New user created successfully');
       }
 
       res.status(200).json({ message: 'User data saved successfully' });
