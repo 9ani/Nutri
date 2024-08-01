@@ -11,7 +11,7 @@ const ModalComponent = ({
   setWeekPlan,
   userID,
   setShowAuthModal,
-  setHasJustCreatedPlan // Add this parameter
+  setHasJustCreatedPlan, // Add this parameter
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [age, setAge] = useState("");
@@ -48,8 +48,48 @@ const ModalComponent = ({
 
   const handleNext = (e) => {
     e.preventDefault();
-    if (currentStep < 8) {
+    if (currentStep < 8 && validateCurrentStep()) {
       setCurrentStep(currentStep + 1);
+    }
+  };
+  const validateCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        if (age < 1 || age > 120) {
+          setError("Пожалуйста, введите корректный возраст (от 1 до 120 лет)");
+          return false;
+        }
+        break;
+      case 2:
+        if (weight < 20 || weight > 300) {
+          setError("Пожалуйста, введите корректный вес (от 20 до 300 кг)");
+          return false;
+        }
+        if (height < 100 || height > 250) {
+          setError("Пожалуйста, введите корректный рост (от 100 до 250 см)");
+          return false;
+        }
+        break;
+    }
+    setError(null);
+    return true;
+  };
+
+  const handleInputChange = (setter) => (e) => {
+    const value = e.target.value;
+    if (value === "" || (parseInt(value) >= 0 && !isNaN(parseInt(value)))) {
+      setter(value);
+    }
+  };
+
+  const handleClickableInput = (field, value) => {
+    switch (field) {
+      case "allergies":
+        setAllergies((prev) => (prev ? `${prev}, ${value}` : value));
+        break;
+      case "dietaryPreferences":
+        setDietaryPreferences((prev) => (prev ? `${prev}, ${value}` : value));
+        break;
     }
   };
 
@@ -67,14 +107,16 @@ const ModalComponent = ({
       return;
     }
     setIsSubmitting(true);
-  
+
     const userJson = {
       age: parseInt(age),
       weight: parseInt(weight),
       height: parseInt(height),
       gender,
       allergies: allergies.split(",").map((item) => item.trim()),
-      dietaryPreferences: dietaryPreferences.split(",").map((item) => item.trim()),
+      dietaryPreferences: dietaryPreferences
+        .split(",")
+        .map((item) => item.trim()),
       goals,
       physicalActivity,
       goalCompletionTime,
@@ -88,21 +130,20 @@ const ModalComponent = ({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ userJson, userID }) // Pass userID here
+          body: JSON.stringify({ userJson, userID }), // Pass userID here
         }
       );
       if (!response.ok) {
         throw new Error(`Failed to submit data: ${response.statusText}`);
       }
-  
+
       const responseData = await response.json();
       setWeekPlan(responseData);
       setIsSubmitting(false);
       closeModal();
       localStorage.setItem("tempWeekPlan", JSON.stringify(responseData));
-      setHasJustCreatedPlan(true);  
+      setHasJustCreatedPlan(true);
       setShowAuthModal(true);
-  
     } catch (error) {
       setIsSubmitting(false);
       setError(error.message);
@@ -142,7 +183,9 @@ const ModalComponent = ({
                   type="number"
                   id="age"
                   value={age}
-                  onChange={(e) => setAge(e.target.value)}
+                  onChange={handleInputChange(setAge)}
+                  min="1"
+                  max="120"
                   className="w-full px-3 py-2 border rounded-md"
                 />
               </div>
@@ -159,7 +202,9 @@ const ModalComponent = ({
                   type="number"
                   id="weight"
                   value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
+                  onChange={handleInputChange(setWeight)}
+                  min="20"
+                  max="300"
                   className="w-full px-3 py-2 border rounded-md"
                 />
                 <label
@@ -172,7 +217,9 @@ const ModalComponent = ({
                   type="number"
                   id="height"
                   value={height}
-                  onChange={(e) => setHeight(e.target.value)}
+                  onChange={handleInputChange(setHeight)}
+                  min="100"
+                  max="250"
                   className="w-full px-3 py-2 border rounded-md"
                 />
               </div>
@@ -209,8 +256,20 @@ const ModalComponent = ({
                   id="allergies"
                   value={allergies}
                   onChange={(e) => setAllergies(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border rounded-md mb-2"
                 />
+                <div className="flex flex-wrap gap-2">
+                  {["Молоко", "Яйца", "Орехи", "Рыба"].map((allergy) => (
+                    <button
+                      key={allergy}
+                      type="button"
+                      onClick={() => handleClickableInput("allergies", allergy)}
+                      className="px-2 py-1 bg-gray-200 rounded-md text-sm"
+                    >
+                      {allergy}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             {currentStep === 5 && (
@@ -226,11 +285,24 @@ const ModalComponent = ({
                   id="dietaryPreferences"
                   value={dietaryPreferences}
                   onChange={(e) => setDietaryPreferences(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border rounded-md mb-2"
                 />
-                <p className="text-sm text-gray-500 mt-2">
-                  Примеры: вегетарианец, безглютеновый, лактозный
-                </p>
+                <div className="flex flex-wrap gap-2">
+                  {["Вегетарианец", "Безглютеновый", "Лактозный"].map(
+                    (pref) => (
+                      <button
+                        key={pref}
+                        type="button"
+                        onClick={() =>
+                          handleClickableInput("dietaryPreferences", pref)
+                        }
+                        className="px-2 py-1 bg-gray-200 rounded-md text-sm"
+                      >
+                        {pref}
+                      </button>
+                    )
+                  )}
+                </div>
               </div>
             )}
             {currentStep === 6 && (
@@ -314,11 +386,21 @@ const ModalComponent = ({
                   id="goalCompletionTime"
                   value={goalCompletionTime}
                   onChange={(e) => setGoalCompletionTime(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border rounded-md mb-2"
                 />
-                <p className="text-sm text-gray-500 mt-2">
-                  Примеры: 3 месяца, 6 месяцев, 1 год
-                </p>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {["3 месяца", "6 месяцев", "1 год"].map((time) => (
+                    <button
+                      key={time}
+                      type="button"
+                      onClick={() => setGoalCompletionTime(time)}
+                      className="px-2 py-1 bg-gray-200 rounded-md text-sm"
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+                
               </div>
             )}
 

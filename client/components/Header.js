@@ -31,7 +31,16 @@ const Header = ({
     longitude: null,
   });
   const mapRef = useRef(null);
-
+  const handleHelpClick = (event) => {
+    event.preventDefault(); // prevents the default action for the anchor tag
+    setTimeout(() => {
+      const helpSection = document.querySelector(".help");
+      if (helpSection) {
+        helpSection.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 0);
+  };
+  
   const handleSignIn = () => {
     router.push("/sign-in");
   };
@@ -369,6 +378,7 @@ const Header = ({
             </a>
             <a
               href="#"
+              onClick={handleHelpClick}
               className="text-green-800 no-underline hover:text-green-600 transition-colors duration-200"
             >
               Помощь
@@ -455,6 +465,7 @@ const Header = ({
               </a>
               <a
                 href="#"
+                onClick={handleHelpClick}
                 className="text-green-800 no-underline hover:text-green-600 transition-colors duration-200"
               >
                 Помощь
