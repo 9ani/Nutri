@@ -473,6 +473,7 @@ const IndexPage = () => {
     sliderWeekPlan.length > 0 ? sliderWeekPlan[currentDayIndex] : null;
 
   return (
+    
     <div
       className={`${
         weekPlan && weekPlan.length > 0 ? "bg-white" : "bg-custom-green"

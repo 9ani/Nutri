@@ -61,28 +61,9 @@ body {
   font-size: 20px;
   color: #28511D;
 }
-@media (min-width: 640px) {
-  .font-rubick {
-    font-size: 18px; /* Slightly larger for small screens */
-  }
-}
 
-@media (min-width: 768px) {
-  .font-rubick {
-    font-size: 20px; /* Original size for medium screens and up */
-  }
-}
-.font-rubick {
-  width: 100%;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-@media (min-width: 640px) {
-  .font-rubick {
-    padding-left: 2rem;
-    padding-right: 2rem;
-  }
-}
+
+
 .header-title a {
   color: #28511D;
 }
@@ -452,7 +433,31 @@ body {
     font-size: 0.7em;
     padding: 100px 8px;
   }
+  .font-rubick {
+    font-size: 16px; /* Adjust font size for mobile */
+  }
+  h2.text-5xl {
+    font-size: 3xl; /* Adjust other font sizes for headings if necessary */
+  }
 
+  .w-full {
+    width: 100%;
+  }
+  .lg\:w-1\/2 {
+    width: 100%;
+  }
+
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .m-auto {
+    margin: auto;
+  }
+
+  .mt-8 {
+    margin-top: 1rem;
+  }
   .custom-slider .slick-list {
     overflow: visible;
   }
