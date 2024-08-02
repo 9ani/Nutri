@@ -61,6 +61,28 @@ body {
   font-size: 20px;
   color: #28511D;
 }
+@media (min-width: 640px) {
+  .font-rubick {
+    font-size: 18px; /* Slightly larger for small screens */
+  }
+}
+
+@media (min-width: 768px) {
+  .font-rubick {
+    font-size: 20px; /* Original size for medium screens and up */
+  }
+}
+.font-rubick {
+  width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) {
+  .font-rubick {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
 .header-title a {
   color: #28511D;
 }
