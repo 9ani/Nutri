@@ -82,25 +82,51 @@ const IndexPage = () => {
   useEffect(() => {
     const saveTempDataToDatabase = async (userId) => {
       const tempUserData = JSON.parse(localStorage.getItem("tempUserData"));
-      if (tempUserData) {
+      const tempWeekPlan = JSON.parse(localStorage.getItem("tempWeekPlan"));
+
+      if (tempUserData || tempWeekPlan) {
         try {
-          const response = await fetch("/api/saveUserData", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userJson: tempUserData,
-              userID: userId,
-            }),
-          });
-          if (response.ok) {
+          if (tempUserData) {
+            await fetch("/api/saveUserData", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                userJson: tempUserData,
+                userID: userId,
+              }),
+            });
             localStorage.removeItem("tempUserData");
-            await fetchUserData(userId);
           }
+
+          if (tempWeekPlan) {
+            const saveResponse = await fetch(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/saveWeekPlan`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  weekPlan: tempWeekPlan,
+                  userID: userId,
+                }),
+              }
+            );
+            if (saveResponse.ok) {
+              const savedWeekPlan = await saveResponse.json();
+              setWeekPlan(savedWeekPlan);
+              localStorage.removeItem("tempWeekPlan");
+            }
+          }
+
+          await fetchUserData(userId);
         } catch (error) {
           console.error("Failed to save user data from temp data:", error);
         }
+      } else {
+        await fetchUserData(userId);
       }
     };
 
@@ -108,7 +134,7 @@ const IndexPage = () => {
       try {
         const weekPlanResponse = await fetch(`/api/weekPlan?userId=${userId}`);
         const weekPlanData = await weekPlanResponse.json();
-        if (weekPlanData) {
+        if (weekPlanData && weekPlanData.weekPlan) {
           setWeekPlan(weekPlanData.weekPlan);
           localStorage.setItem(
             "weekPlan",
@@ -117,29 +143,29 @@ const IndexPage = () => {
           checkIfNeedExtendPlan(weekPlanData.weekPlan);
         }
 
-        const tempWeekPlan = localStorage.getItem("tempWeekPlan");
-        if (tempWeekPlan) {
-          const saveResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/saveWeekPlan`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                weekPlan: JSON.parse(tempWeekPlan),
-                userID: userId,
-              }),
-            }
-          );
-          if (saveResponse.ok) {
-            const savedWeekPlan = await saveResponse.json();
-            setWeekPlan(savedWeekPlan);
-            localStorage.setItem("weekPlan", JSON.stringify(savedWeekPlan));
-            localStorage.removeItem("tempWeekPlan");
-            checkIfNeedExtendPlan(savedWeekPlan);
-          }
-        }
+        // const tempWeekPlan = localStorage.getItem("tempWeekPlan");
+        // if (tempWeekPlan) {
+        //   const saveResponse = await fetch(
+        //     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/saveWeekPlan`,
+        //     {
+        //       method: "POST",
+        //       headers: {
+        //         "Content-Type": "application/json",
+        //       },
+        //       body: JSON.stringify({
+        //         weekPlan: JSON.parse(tempWeekPlan),
+        //         userID: userId,
+        //       }),
+        //     }
+        //   );
+        //   if (saveResponse.ok) {
+        //     const savedWeekPlan = await saveResponse.json();
+        //     setWeekPlan(savedWeekPlan);
+        //     localStorage.setItem("weekPlan", JSON.stringify(savedWeekPlan));
+        //     localStorage.removeItem("tempWeekPlan");
+        //     checkIfNeedExtendPlan(savedWeekPlan);
+        //   }
+        // }
 
         const foodHistoryResponse = await fetch(
           `/api/foodHistory?userId=${userId}`
@@ -206,6 +232,11 @@ const IndexPage = () => {
   }, [weekPlan]);
 
   const checkIfNeedExtendPlan = (weekPlan) => {
+    if (!weekPlan || weekPlan.length === 0) {
+      setNeedExtendPlan(false);
+      setShowExtendPlanModal(false);
+      return;
+    }
     const today = new Date();
     const lastDayOfPlan =
       weekPlan.length > 0 ? new Date(weekPlan[weekPlan.length - 1].date) : null;
@@ -218,6 +249,9 @@ const IndexPage = () => {
     ) {
       setNeedExtendPlan(true);
       setShowExtendPlanModal(true);
+    } else {
+      setNeedExtendPlan(false);
+      setShowExtendPlanModal(false);
     }
   };
 
@@ -483,7 +517,7 @@ const IndexPage = () => {
         </div>
       )}
       <div className="flex flex-col lg:flex-row items-center justify-between flex-grow">
-        {(!isSignedIn || (isSignedIn && !weekPlan)) && !isCreatingPlan && (
+      {(!isSignedIn || (isSignedIn && (!weekPlan || weekPlan.length === 0))) && !isCreatingPlan && (
           <div className="flex flex-col lg:flex-row items-center justify-between w-full min-h-screen bg-custom-green">
             <div className="w-full lg:w-1/2 order-2 lg:order-1">
               <Image
@@ -646,7 +680,7 @@ const IndexPage = () => {
           )}
         </div>
       </div>
-      {(!isSignedIn || (isSignedIn && !weekPlan)) && !isCreatingPlan && (
+      {(!isSignedIn || (isSignedIn &&  (!weekPlan || weekPlan.length === 0))) && !isCreatingPlan && (
         <div className="bg-custom-green help py-12">
           <div className="bg-custom-green pb-24">
             <div className="container mx-auto px-4">

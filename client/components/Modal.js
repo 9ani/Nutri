@@ -138,12 +138,32 @@ const ModalComponent = ({
       }
 
       const responseData = await response.json();
-      setWeekPlan(responseData);
+      if (userID) {
+        // If user is signed in, save the week plan immediately
+        const saveResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/saveWeekPlan`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            weekPlan: responseData,
+            userID: userID,
+          }),
+        });
+        if (saveResponse.ok) {
+          const savedWeekPlan = await saveResponse.json();
+          setWeekPlan(savedWeekPlan);
+        } else {
+          throw new Error("Failed to save week plan");
+        }
+      } else {
+        // If user is not signed in, store in localStorage
+        localStorage.setItem("tempWeekPlan", JSON.stringify(responseData));
+      }
       setIsSubmitting(false);
       closeModal();
-      localStorage.setItem("tempWeekPlan", JSON.stringify(responseData));
       setHasJustCreatedPlan(true);
-      setShowAuthModal(true);
+      setShowAuthModal(!userID);
     } catch (error) {
       setIsSubmitting(false);
       setError(error.message);

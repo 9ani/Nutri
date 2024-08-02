@@ -164,6 +164,7 @@ const AddFoodModal = ({
                   src={foodResult.imageUrl}
                   alt={foodResult.name}
                   className="max-w-full h-auto rounded-lg shadow-lg"
+                  style={{ width: "300px", height: "300px", objectFit: "cover" }}
                 />
               </motion.div>
               <h4 className="text-xl font-semibold mb-4 text-center">
