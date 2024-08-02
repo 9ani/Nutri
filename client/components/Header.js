@@ -310,7 +310,7 @@ const Header = ({
           />
           <a
             href="/"
-            className="text-green-800  text-2xl no-underline font-rubick"
+            className="text-green-800  text-2xl no-underline font-rubick2"
           >
             NutriWeek
           </a>
