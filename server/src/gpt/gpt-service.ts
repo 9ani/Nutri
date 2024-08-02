@@ -282,6 +282,7 @@ class GptService implements GptServiceInterface {
       const prompt = `By looking at Image , please identify the dish and list its ingredients in JSON format. DO NOT WRITE ANYTHING EXCEPT JSON. Here is the example of response format: 
             {
   "dish": "Pasta with meatballs and tomato sauce",
+  "dish_in_russian": "Макароны с фрикадельками и томатным соусом",
   "ingredients": [
     "penne pasta",
     "meatballs",
@@ -321,7 +322,7 @@ class GptService implements GptServiceInterface {
       console.log("Nutrition data retrieved:", nutritionData);
   
       const foodHistory: FoodHistoryDocument = new FoodHistoryModel({
-        name: foodAnalysis.dish,
+        name: foodAnalysis.dish_in_russian,
         imageUrl: photoUrl,
         dateEaten: new Date(),
         calories: nutritionData.calories || 0,

@@ -49,7 +49,7 @@ const AddFoodModal = ({
           updateNutritionData(data.updatedWeekPlan.weekPlan);
           addFoodHistory(data.allUserFoodHistory);
           setFoodResult({
-            name: data.foodAnalysis.dish,
+            name: data.foodAnalysis.dish_in_russian,
             imageUrl:
               data.allUserFoodHistory[data.allUserFoodHistory.length - 1]
                 .imageUrl,
@@ -110,7 +110,7 @@ const AddFoodModal = ({
   return (
     <Modal show={show} onHide={handleModalClose} centered size="lg">
       <Modal.Header closeButton className="bg-custom-green text-white">
-        <Modal.Title>{foodResult ? "Food Added" : "Add Food"}</Modal.Title>
+        <Modal.Title>{foodResult ? "Пища добавлена" : "Добавить пищу"}</Modal.Title>
       </Modal.Header>
       <Modal.Body className="p-6">
         {loading ? (

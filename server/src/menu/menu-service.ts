@@ -376,7 +376,7 @@ class MenuService {
       1. The name of the dish
       2. Its price
       3. The restaurant name
-      4. A detailed reason for the recommendation, explaining how it aligns with the user's current nutritional needs
+      4. A detailed reason for the recommendation, explaining how it aligns with the user's current nutritional needs strongly in russian language.
       
       Prioritize dishes that closely match the required nutritional values. For example, if the user needs 500 calories, recommend dishes that provide close to this amount without significantly exceeding it.
       
@@ -389,7 +389,7 @@ class MenuService {
             "dish": "Dish Name",
             "price": "Dish Price",
             "restaurant": "Restaurant Name",
-            "reason": "Detailed explanation of how this dish meets the user's current nutritional needs, including specific nutritional values if available."
+            "reason": "Detailed explanation of how this dish meets the user's current nutritional needs in russian language, including specific nutritional values if available."
           }
         ]
       }

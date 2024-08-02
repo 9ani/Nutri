@@ -95,7 +95,7 @@ const AddMenuModal = ({ show1, handleClose1, nutritionNeeded }) => {
   return (
     <Modal show={show1} onHide={handleModalClose} centered size="lg">
       <Modal.Header closeButton className="bg-custom-green text-white">
-        <Modal.Title>Add Menu</Modal.Title>
+        <Modal.Title>Добавить меню</Modal.Title>
       </Modal.Header>
       <Modal.Body className="p-6">
         {loading ? (
@@ -108,7 +108,7 @@ const AddMenuModal = ({ show1, handleClose1, nutritionNeeded }) => {
         ) : responseMessage ? (
           <div>
             <h3 className="text-xl font-bold mb-4">{responseMessage}</h3>
-            <h4 className="text-lg font-semibold mb-2">Recommended Food:</h4>
+            <h4 className="text-lg font-semibold mb-2">Рекомендованные блюда:</h4>
             {renderRecommendedFood(responseData)}
             <Button
               variant="secondary"

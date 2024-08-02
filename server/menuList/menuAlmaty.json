@@ -51417,5 +51417,15 @@
     "name": "I`m Cafe, кофейня ",
     "parsedImages": [],
     "parsedMenu": []
+  },
+  {
+    "id": "70000001029793290",
+    "name": "Пятница, кафе-бар",
+    "parsedImages": [
+      "https://i8.photo.2gis.com/images/branch/0/30258560127844796_5420_656x340.jpg"
+    ],
+    "parsedMenu": [
+      "The image shows three different dishes, likely from a Central Asian cuisine:\n\n**Dish 1 (Top Left):**  \nThis dish is difficult to identify precisely without a clearer view. It appears to be a creamy dish, possibly with fish and potatoes. \n\n**Dish 2 (Top Right):**\nThis dish features grilled meat, likely lamb or beef, served with roasted potatoes, pickled onions, green onions, and a vibrant salad of pink pickled onions. There are also pickled green chilies or peppers. \n\n**Dish 3 (Bottom):**\nThis dish appears to be a hearty stew or soup. It contains chunks of meat, likely lamb or beef, along with potatoes, onions, carrots, and herbs. It's served in a traditional pot with sides of flatbread, chopped herbs, and a condiment that could be a spicy sauce or a pickled relish. \n"
+    ]
   }
 ]

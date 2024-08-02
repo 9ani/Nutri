@@ -114,7 +114,7 @@ const IndexPage = () => {
             "weekPlan",
             JSON.stringify(weekPlanData.weekPlan)
           );
-          checkIfNeedExtendPlan(weekPlanData.weekPlan); 
+          checkIfNeedExtendPlan(weekPlanData.weekPlan);
         }
 
         const tempWeekPlan = localStorage.getItem("tempWeekPlan");
@@ -186,18 +186,24 @@ const IndexPage = () => {
     if (weekPlan && weekPlan.length > 0) {
       const todayIndex = getTodayIndex(weekPlan);
 
-    if (todayIndex !== -1) {
-      setCurrentDayIndex(todayIndex);
-      const todayPlan = weekPlan[todayIndex];
-      setTodaysFood(todayPlan?.meals ?? []);
-      setTodaysNutrition(todayPlan?.nutritionSummary ?? {});
-      const lastDay = new Date(weekPlan[weekPlan.length - 1]?.date);
-      if (!isNaN(lastDay)) {
-        setLastDayOfCurrentWeek(lastDay);
+      if (todayIndex !== -1) {
+        setCurrentDayIndex(todayIndex);
+        const todayPlan = weekPlan[todayIndex];
+        setTodaysFood(
+          todayPlan?.meals.map((meal) => ({
+            ...meal,
+            meal: translateMeal(meal.meal), // Translate meal names
+            description: extractRussianDescription(meal.description), // Extract Russian description
+          }))
+        );
+        setTodaysNutrition(todayPlan?.nutritionSummary ?? {});
+        const lastDay = new Date(weekPlan[weekPlan.length - 1]?.date);
+        if (!isNaN(lastDay)) {
+          setLastDayOfCurrentWeek(lastDay);
+        }
       }
     }
-  }
-}, [weekPlan]);
+  }, [weekPlan]);
 
   const checkIfNeedExtendPlan = (weekPlan) => {
     const today = new Date();
@@ -454,23 +460,23 @@ const IndexPage = () => {
       {showExtendPlanModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4">Extend Your Meal Plan?</h2>
+            <h2 className="text-2xl font-bold mb-4">Продлить план питания?</h2>
             <p className="mb-4">
-              Your current meal plan has ended. Would you like to extend it for
-              another week?
+              Ваш текущий план питания закончился. Хотите продлить его на
+              следующую неделю?
             </p>
             <div className="flex justify-end">
               <button
                 className="bg-gray-300 text-black px-4 py-2 rounded mr-2"
                 onClick={() => setShowExtendPlanModal(false)}
               >
-                No
+                Нет
               </button>
               <button
                 className="bg-custom-green text-white px-4 py-2 rounded"
                 onClick={handleExtendPlan}
               >
-                Yes, Extend Plan
+                Да, продлить план
               </button>
             </div>
           </div>
@@ -489,19 +495,19 @@ const IndexPage = () => {
               />
             </div>
             <div className="w-full lg:w-1/2 px-8 lg:px-16 py-12 order-1 lg:order-2">
-              <h2 className="text-5xl lg:text-7xl font-bold text-[#CEE422] mb-8">
+              <h2 className="text-5xl lg:text-7xl  text-[#CEE422] mb-20 font-rubick">
                 Составление рациона питания
               </h2>
               <h4 className="text-xl lg:text-2xl font-bold text-[#CEE422] mb-8">
                 Введите свои диетические предпочтения, чтобы составить план
                 питания.
               </h4>
-              <div className="w-full max-w-md">
+              <div className="w-full ">
                 <button
                   onClick={handleButtonClick}
                   className="w-full bg-[#CEE422] text-custom-green rounded-lg text-xl font-bold py-4 px-8 transition duration-300 ease-in-out hover:bg-[#DAF23D] hover:shadow-lg"
                 >
-                  Создать
+                  Создать план питания
                 </button>
               </div>
               <ModalComponent
@@ -556,10 +562,12 @@ const IndexPage = () => {
                       aria-controls={`panel${index + 1}d-content`}
                       id={`panel${index + 1}d-header`}
                     >
-                      <Typography>{food.meal}</Typography>
+                      <Typography>{translateMeal(food.meal)}</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                      <Typography>{food.description}</Typography>
+                      <Typography>
+                        {extractRussianDescription(food.description)}
+                      </Typography>
                       {food.img_url && (
                         <img
                           src={food.img_url}
@@ -642,7 +650,7 @@ const IndexPage = () => {
         <div className="bg-custom-green help py-12">
           <div className="bg-custom-green pb-24">
             <div className="container mx-auto px-4">
-              <h1 className="text-5xl lg:text-6xl font-bold text-[#CEE422] mb-16 text-center">
+              <h1 className="text-5xl lg:text-6xl  text-[#CEE422] mb-16 text-center font-rubick">
                 Как пользоваться системой
               </h1>
 
@@ -743,6 +751,22 @@ const IndexPage = () => {
       <Footer hasWeekPlan={weekPlan} />
     </div>
   );
+};
+
+// Function to translate meal names to Russian
+const translateMeal = (meal) => {
+  const translations = {
+    Breakfast: "Завтрак",
+    Lunch: "Обед",
+    Dinner: "Ужин",
+    Snack: "Перекус",
+  };
+  return translations[meal] || meal;
+};
+
+// Function to remove English descriptions from meal descriptions
+const extractRussianDescription = (description) => {
+  return description.replace(/\(.*?\)/, "").trim();
 };
 
 export default IndexPage;
