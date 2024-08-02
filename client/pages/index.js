@@ -530,7 +530,7 @@ const IndexPage = () => {
               />
             </div>
             <div className="w-full lg:w-1/2 px-8 lg:px-16 py-12 order-1 lg:order-2">
-              <h2 className="text-5xl lg:text-7xl  text-[#CEE422] mb-20 font-rubick">
+              <h2 className="text-5xl lg:text-7xl  text-[#CEE422] mb-20 font-rubick2">
                 Составление рациона питания
               </h2>
               <h4 className="text-xl lg:text-2xl font-bold text-[#CEE422] mb-8">
@@ -685,7 +685,7 @@ const IndexPage = () => {
         <div className="bg-custom-green help py-12">
           <div className="bg-custom-green pb-24">
             <div className="container mx-auto px-4">
-              <h1 className="text-5xl lg:text-6xl  text-[#CEE422] mb-16 text-center font-rubick">
+              <h1 className="text-5xl lg:text-6xl  text-[#CEE422] mb-16 text-center font-rubick2">
                 Как пользоваться системой
               </h1>
 

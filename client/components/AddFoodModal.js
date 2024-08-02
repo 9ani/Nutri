@@ -52,7 +52,7 @@ const AddFoodModal = ({
           setFoodResult({
             name: data.foodAnalysis.dish_in_russian,
             imageUrl:
-              data.allUserFoodHistory[data.allUserFoodHistory.length - 1]
+              data.allUserFoodHistory[0]
                 .imageUrl,
             nutrients: data.nutritionData.totalNutrients,
           });

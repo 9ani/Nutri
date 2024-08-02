@@ -577,4 +577,12 @@ body {
     font-size: 16px;
     width: 100%;
   }
+  .font-rubick2{
+    font-family: "Inter", sans-serif;
+    font-size: 15px;
+    font-weight: 900;
+  font-style: normal;
+  color: #28511D;
+
+  }
 }
