@@ -1,9 +1,14 @@
 import React from 'react';
 
 const DayPlanCard = ({ dayPlan, handleCardClick }) => {
+  if (!dayPlan) {
+    return null; // You can return a fallback UI here if needed
+  }
+
   const formatNutrition = (filled, total) => {
     return `${Math.round(filled)} / ${Math.round(total)}`;
   };
+
   const dayTranslations = {
     Monday: "Понедельник",
     Tuesday: "Вторник",
@@ -21,7 +26,7 @@ const DayPlanCard = ({ dayPlan, handleCardClick }) => {
     >
       <div className="p-6 h-full flex flex-col min-h-[450px] md:h-[450px]">
         <h3 className="text-2xl font-bold mb-4 text-green-800">
-          {dayPlan.date} - {dayTranslations[dayPlan.day] || dayPlan.day}
+          { dayPlan.date} - {dayTranslations[dayPlan.day] || dayPlan.day}
         </h3>
         <div className="flex-grow overflow-auto mb-6 pr-2 custom-scrollbar">
           <h4 className="font-bold mb-3 text-lg text-green-700">Основные блюда:</h4>
