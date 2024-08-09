@@ -220,7 +220,7 @@ const IndexPage = () => {
             ...meal,
             meal: translateMeal(meal.meal), // Translate meal names
             description: extractRussianDescription(meal.description), // Extract Russian description
-          }))
+          })) || []
         );
         setTodaysNutrition(todayPlan?.nutritionSummary ?? {});
         const lastDay = new Date(weekPlan[weekPlan.length - 1]?.date);
@@ -260,10 +260,9 @@ const IndexPage = () => {
       return 0;
     }
     const today = new Date().toISOString().split("T")[0];
-    const todayIndex = weekPlan.findIndex((dayPlan) => dayPlan.date === today);
-    return todayIndex !== -1 ? todayIndex : 0;
+    return weekPlan.findIndex((dayPlan) => dayPlan.date === today);
   };
-
+  
   const get7DayWindow = (weekPlan, todayIndex) => {
     if (!weekPlan || weekPlan.length === 0) {
       return [];
@@ -317,7 +316,7 @@ const IndexPage = () => {
   };
 
   const todayIndex = getTodayIndex(weekPlan);
-  const initialSliderIndex = Math.max(0, todayIndex);
+  const initialSliderIndex = todayIndex % 7;
   const sliderWeekPlan = get7DayWindow(weekPlan, todayIndex);
 
   const handleExtendPlan = async () => {
@@ -528,7 +527,7 @@ const IndexPage = () => {
                       sliderWeekPlan[currentDayIndex]?.nutritionSummary
                     }
                     date={sliderWeekPlan[currentDayIndex]?.date}
-                  />
+                    />
                 </div>
                 <NutritionDetails
                   nutritionSummary={
